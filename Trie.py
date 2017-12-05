@@ -21,7 +21,7 @@ class trie:
     # get the syllables of inWord from the trie. If it's not in the trie, return ""
     def getWord(self, inWord):
         node = self.__getWordHelper(inWord)
-        if node is not None:
+        if node is not None and len(node.syllables) > 0:
             return node.syllables
 
         return ""
@@ -45,6 +45,15 @@ class trie:
             return currNode
 
         return None
+
+    def updateWord(self, inWord, oldPronunciation, newPronunciation):
+        node = self.__getWordHelper(inWord)
+
+        if oldPronunciation in node.syllables:
+            if newPronunciation != "":
+                node.syllables[node.syllables.index(oldPronunciation)] = newPronunciation
+            else:
+                node.syllables.remove(oldPronunciation)
 
     def getSubTrie(self, inSubWord):
         alphabet = '\'abcdefghijklmnopqrstuvwxyz'
@@ -102,14 +111,15 @@ class trie:
 
     # formats the syllables to a readable format
     def writeSyllablesToFile(self, word, node, file):
-        syllables = node.syllables[0]
-        index = 1
+        if len(node.syllables) > 0:
+            syllables = node.syllables[0]
+            index = 1
 
-        while index < len(node.syllables):
-            syllables = syllables + '|' + node.syllables[index]
-            index+= 1
+            while index < len(node.syllables):
+                syllables = syllables + '|' + node.syllables[index]
+                index+= 1
 
-        file.write("_" + word + ": " + syllables + '\n')
+            file.write("_" + word + ": " + syllables + '\n')
 
 
     # sets a word within syllables to be marked as the one to be used

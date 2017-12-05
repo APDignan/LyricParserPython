@@ -74,17 +74,25 @@ class parser():
             myErr = 1
             # testFile = open(sys.argv[1])
             myErr = 2
-            self.myUst = Ust(sys.argv[1])
+            print("Opening UST")
+            if self.myUst is None:
+                self.myUst = Ust(sys.argv[1])
             myErr = 3
-            self.myOto = Oto(self.myUst.voiceDir)
+            print("Opening OTO")
+            if self.myOto is None:
+                self.myOto = Oto(self.myUst.voiceDir)
             myErr = 4
-            self.myPMap = prefixMap(self.myUst.voiceDir)
+            print("Opening PREFIX.MAP")
+            if self.myPMap is None:
+                self.myPMap = prefixMap(self.myUst.voiceDir)
 
             try:
+                print("Parsing VCCV")
                 self.parseVCCV()
+                print("Done parsing VCCV")
             except ParserException as err:
                 print(err.myMsg)
-                traceback.print_exc()
+                #traceback.print_exc()
             except Exception as err:
                 traceback.print_exc()
                 input("Press ENTER to Continue...")
