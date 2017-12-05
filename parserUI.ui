@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>869</width>
+    <height>687</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>LyricParser</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QTabWidget" name="tabWidget">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>871</width>
+      <height>601</height>
+     </rect>
+    </property>
+    <property name="currentIndex">
+     <number>1</number>
+    </property>
+    <widget class="QWidget" name="tabMain">
+     <attribute name="title">
+      <string>Parser</string>
+     </attribute>
+     <widget class="QTableWidget" name="tableWidget">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>30</y>
+        <width>790</width>
+        <height>491</height>
+       </rect>
+      </property>
+      <attribute name="horizontalHeaderDefaultSectionSize">
+       <number>197</number>
+      </attribute>
+      <column>
+       <property name="text">
+        <string>NoteNum</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Lyric</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Word Found</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Syllable</string>
+       </property>
+      </column>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tabError">
+     <attribute name="title">
+      <string>Errors</string>
+     </attribute>
+     <widget class="QPushButton" name="pushButton">
+      <property name="geometry">
+       <rect>
+        <x>200</x>
+        <y>510</y>
+        <width>111</width>
+        <height>28</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Update Dictionary</string>
+      </property>
+     </widget>
+     <widget class="QTableWidget" name="tblDictionary_2">
+      <property name="geometry">
+       <rect>
+        <x>40</x>
+        <y>40</y>
+        <width>771</width>
+        <height>431</height>
+       </rect>
+      </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="statusTip">
+       <string/>
+      </property>
+      <property name="dragDropOverwriteMode">
+       <bool>true</bool>
+      </property>
+      <attribute name="horizontalHeaderDefaultSectionSize">
+       <number>220</number>
+      </attribute>
+      <column>
+       <property name="text">
+        <string>Word</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Length</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Syllables</string>
+       </property>
+      </column>
+     </widget>
+     <widget class="QPushButton" name="pushButton_2">
+      <property name="geometry">
+       <rect>
+        <x>500</x>
+        <y>510</y>
+        <width>191</width>
+        <height>28</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Update Dictionary and Parse</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tabDictionary">
+     <attribute name="title">
+      <string>Dictionary</string>
+     </attribute>
+     <widget class="QPushButton" name="btnDictionarySearch">
+      <property name="geometry">
+       <rect>
+        <x>520</x>
+        <y>490</y>
+        <width>93</width>
+        <height>28</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Search</string>
+      </property>
+     </widget>
+     <widget class="QTableWidget" name="tblDictionary">
+      <property name="geometry">
+       <rect>
+        <x>40</x>
+        <y>20</y>
+        <width>771</width>
+        <height>431</height>
+       </rect>
+      </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="statusTip">
+       <string/>
+      </property>
+      <property name="dragDropOverwriteMode">
+       <bool>true</bool>
+      </property>
+      <attribute name="horizontalHeaderDefaultSectionSize">
+       <number>257</number>
+      </attribute>
+      <column>
+       <property name="text">
+        <string>Word</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Syllables</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Length</string>
+       </property>
+      </column>
+     </widget>
+     <widget class="QPushButton" name="btnDictionaryAdd">
+      <property name="geometry">
+       <rect>
+        <x>690</x>
+        <y>490</y>
+        <width>93</width>
+        <height>28</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Add Word(s)</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="ltxtDictionaryInput">
+      <property name="geometry">
+       <rect>
+        <x>80</x>
+        <y>490</y>
+        <width>341</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Here is some Text</string>
+      </property>
+     </widget>
+    </widget>
+   </widget>
+   <widget class="QPushButton" name="btnConfirm">
+    <property name="geometry">
+     <rect>
+      <x>140</x>
+      <y>610</y>
+      <width>93</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Confirm</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnCancel">
+    <property name="geometry">
+     <rect>
+      <x>560</x>
+      <y>610</y>
+      <width>93</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Cancel</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>869</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionSettings"/>
+   </widget>
+   <widget class="QMenu" name="menuSettings">
+    <property name="title">
+     <string>Settings</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuSettings"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionSettings">
+   <property name="text">
+    <string>Close</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

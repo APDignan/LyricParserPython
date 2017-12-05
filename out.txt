@@ -1349,7 +1349,7 @@ _domestic: du:me:sti,ik
 _don: da,an
 _done: du,un
 _donned: d9,9nd
-_dont: dO,Ont
+_don't: dO,Ont
 _doom: do,om
 _door: d0,0r
 _doors: d0,0rs
@@ -4583,7 +4583,7 @@ _thank: thA,Ank
 _thanks: thA,Anks
 _that: dh@,@t
 _thatd: dh@,@d
-_thats: dh@,@ts
+_that's: dh@,@ts
 _the: dhE|dhu
 _theater: thE,Er:dd3
 _theaters: thE,Er:dd3,3s
