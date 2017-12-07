@@ -363,68 +363,6 @@ class note:
     def lyric(self, inLyric):
         self.setProperty("Lyric", inLyric)
 
-    @property
-    def lastVowel(self):
-        vowels = ['a', 'e', 'i', 'o', 'u', 'E', '9', '3', '@', 'A', 'I', 'O', '8', 'Q', '6', 'x', '9l', '0l', '8n', '&', '0r', '1ng', 'Ang']
-
-        myVowel = self.lyric[-1:] if self.lyric[-1:] in vowels else ""
-        myVowel = self.lyric[-2:] if len(self.lyric) > 1 and self.lyric[-2:] in vowels else myVowel
-        myVowel = self.lyric[-3:] if len(self.lyric) > 2 and self.lyric[-3:] in vowels else myVowel
-
-        return myVowel
-
-    @property
-    def CCBeginning(self, vowel = None):
-        vowels = vowels = ['a', 'e', 'i', 'o', 'u', 'E', '9', '3', '@', 'A', 'I', 'O', '8', 'Q', '6', 'x', '&', '0', '1']
-
-        index = 0
-        while index < len(self.lyric) and self.lyric[index] not in vowels:
-            index+= 1
-
-        return self.lyric[:index]
-
-    @property
-    def VBeginning(self):
-        vowels = vowels = ['a', 'e', 'i', 'o', 'u', 'E', '9', '3', '@', 'A', 'I', 'O', '8', 'Q', '6', 'x', '&', '0',
-                           '1']
-
-        return self.lyric[0] if self.lyric[0] in vowels else ""
-
-    @property
-    def lastConst(self):
-        vowels = ['a', 'e', 'i', 'o', 'u', 'E', '9', '3', '@', 'A', 'I', 'O', '8', 'Q', '6', 'x', '&', '0', '1']
-
-        index = len(self.lyric)
-        myLastConst = ""
-        while index > -1 and self.lyric[index-1:index] not in vowels:
-            index-= 1
-
-        return self.lyric[index+1:]
-
-    @property
-    def splitLyric(self):
-        oneCharVowels = ['a', 'e', 'i', 'o', 'u', 'E', '9', '3', '@', 'A', 'I', 'O', '8', 'Q', '6', 'x', '&']
-        twoCharVowels = ['9l', '0l', '8n', '0r']
-        threeCharVowels = ['1ng', 'Ang']
-
-        myList = list()
-
-        if self.lyric[0:1] in oneCharVowels:
-            myList = [self.lyric[0:1], self.lyric[1:]]
-        elif len(self.lyric) > 1 and self.lyric[0:2] in twoCharVowels:
-            myList = [self.lyric[0:2], self.lyric[2:]]
-        elif len(self.lyric) > 2 and self.lyric[0:3] in threeCharVowels:
-            myList = [self.lyric[0:3], self.lyric[3:]]
-
-        return myList
-
-
-
-
-
-
-
-
     # pitch can be retrieved either as their numeric value or the note/octave pair. Any param for flag will get the
     # latter, while no param will get the former.
     @property
@@ -437,8 +375,6 @@ class note:
             self.setProperty("NoteNum", str(inNote))
         else:
             self.setProperty("NoteNum", str(utauGen.noteToInt(inNote)))
-
-
 
     @property
     def strPitch(self):
@@ -500,6 +436,67 @@ class note:
     @parentLyric.setter
     def parentLyric(self, inLyric):
         self.__parentLyric = inLyric
+
+    # gets the last vowel for a subNote.
+    @property
+    def lastVowel(self):
+        vowels = ['a', 'e', 'i', 'o', 'u', 'E', '9', '3', '@', 'A', 'I', 'O', '8', 'Q', '6', 'x', '9l', '0l', '8n', '&',
+                  '0r', '1ng', 'Ang']
+
+        myVowel = self.lyric[-1:] if self.lyric[-1:] in vowels else ""
+        myVowel = self.lyric[-2:] if len(self.lyric) > 1 and self.lyric[-2:] in vowels else myVowel
+        myVowel = self.lyric[-3:] if len(self.lyric) > 2 and self.lyric[-3:] in vowels else myVowel
+
+        return myVowel
+
+    # gets the consonants at the beginning of a note.
+    @property
+    def CCBeginning(self, vowel=None):
+        vowels = vowels = ['a', 'e', 'i', 'o', 'u', 'E', '9', '3', '@', 'A', 'I', 'O', '8', 'Q', '6', 'x', '&', '0', '1']
+
+        index = 0
+        while index < len(self.lyric) and self.lyric[index] not in vowels:
+            index += 1
+
+        return self.lyric[:index]
+
+    # gets the vowel at the beginning of a note
+    @property
+    def VBeginning(self):
+        vowels = vowels = ['a', 'e', 'i', 'o', 'u', 'E', '9', '3', '@', 'A', 'I', 'O', '8', 'Q', '6', 'x', '&', '0',
+                           '1']
+
+        return self.lyric[0] if self.lyric[0] in vowels else ""
+
+    # gets the consonants at the end of a syllable
+    @property
+    def lastConst(self):
+        vowels = ['a', 'e', 'i', 'o', 'u', 'E', '9', '3', '@', 'A', 'I', 'O', '8', 'Q', '6', 'x', '&', '0', '1']
+
+        index = len(self.lyric)
+        myLastConst = ""
+        while index > -1 and self.lyric[index - 1:index] not in vowels:
+            index -= 1
+
+        return self.lyric[index + 1:]
+
+    # split a lyric on it's vowel and returns the split lyric
+    @property
+    def splitLyric(self):
+        oneCharVowels = ['a', 'e', 'i', 'o', 'u', 'E', '9', '3', '@', 'A', 'I', 'O', '8', 'Q', '6', 'x', '&']
+        twoCharVowels = ['9l', '0l', '8n', '0r']
+        threeCharVowels = ['1ng', 'Ang']
+
+        myList = list()
+
+        if self.lyric[0:1] in oneCharVowels:
+            myList = [self.lyric[0:1], self.lyric[1:]]
+        elif len(self.lyric) > 1 and self.lyric[0:2] in twoCharVowels:
+            myList = [self.lyric[0:2], self.lyric[2:]]
+        elif len(self.lyric) > 2 and self.lyric[0:3] in threeCharVowels:
+            myList = [self.lyric[0:3], self.lyric[3:]]
+
+        return myList
 
     # returns the propertiesKeys for iteration
     def getPropertiesKeys(self):

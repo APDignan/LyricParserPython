@@ -41,6 +41,7 @@ class mainWindow(object):
     def setupUi(self, MainWindow):
         self.myParser = parser()
         self.myDictionary = list()
+        self.originalParse = list()
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(870, 687)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -222,20 +223,24 @@ class mainWindow(object):
         self.actionSettings.setText(_translate("MainWindow", "Close"))
         self.mnuSaveDictionary.setText(_translate("MainWindow", "Save Dictionary"))
 
+    # loads the dictionary file into the parser
     def loadDictionary(self):
-        print("My parser is %s and my trie is %s" %(self.myParser, self.myParser.myTrie))
         with open("dictionary.txt") as myFile:
             for line in myFile:
-                addWordToTrie(line, self.myParser.myTrie)
+                self.myParser.addWordToTrie(line)
         myFile.close()
 
+    # used by search button on the dictionary page. Checks if the word given is in the dictionary, and puts any syllables
+    # in the grid. If the word ends with "-" looks up any words that start with the substring.
     def checkWord(self):
         inWord = self.ltxtDictionaryInput.text().lower()
         self.myDictionary.clear()
 
+        # if the word ends with a "-", look up all of the words that start with the substring and put them on the grid
         if len(inWord) < 100 and inWord[-1] == "-" and inWord != "-":
             inWord = inWord[:-1]
             inserts = self.myParser.myTrie.getSubTrie(inWord)
+            # loop through each word and insert them into the grid
             if len(inserts) > 2:
                 self.tblDictionary.setRowCount(len(inserts) / 3)
                 count = 0
@@ -247,16 +252,16 @@ class mainWindow(object):
                     self.tblDictionary.setItem(count, groupCount, item)
                     tempDictionaryItem.append(insert)
 
+                    # insert the data into the grid once we've found each part of the row
                     groupCount += 1
                     if groupCount > 2:
                         self.myDictionary.append(dictionaryItem(tempDictionaryItem[0], tempDictionaryItem[1], tempDictionaryItem[2]))
                         tempDictionaryItem = list()
                         groupCount = 0
                         count += 1
+        # if the word exists put it in the dictionary table
         elif len(inWord) < 100 and self.myParser.myTrie.getWord(inWord) != "":
-            # self.tblDictionary = QtWidgets.QTableWidget(self.tabDictionary)
             pronunciations = self.myParser.myTrie.getWord(inWord)
-            print(str(pronunciations))
             inserts = list()
             for i in pronunciations:
                 inserts.append(inWord)
@@ -281,20 +286,12 @@ class mainWindow(object):
         else:
             self.tblDictionary.setRowCount(0)
 
-
-            #
-            # inserts = [inWord, str(self.myParser.myTrie.getWord(inWord)[0]), str(len(self.myParser.myTrie.getWord(inWord)[0].split(":")))]
-            # self.tblDictionary.setRowCount(size + 1)
-            # count = 0
-            # for insert in inserts:
-            #     item = QtWidgets.QTableWidgetItem()
-            #     item.setText(insert)
-            #     self.tblDictionary.setItem(size, count, item)
-            #     count += 1
-
+    # used on init. Converts lyrics to the psuedo VCCV syntax and puts them in the UST. Any errors are triggered here.
     def parseUST(self):
+        # go through each note and try to find the lyric in the dictionary
         self.myParser.run()
 
+        # any missing words are stored in parser.missingWords. Add all missing words to the Error tab and mark the number of errors
         if len(self.myParser.missingWords) > 0:
             self.tblErrors.setRowCount(len(self.myParser.missingWords))
             self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabError), "Errors (" + str(len(self.myParser.missingWords)) + ")")
@@ -309,43 +306,46 @@ class mainWindow(object):
 
         self.updateParserTable()
 
+    # updates the parser grid based on the current state of the UST
     def updateParserTable(self):
         self.tblParserOutput.setRowCount(len(self.myParser.myUst.notes))
         count = 0
         groupCount = 0
+        # loop through each note in the UST
         for note in self.myParser.myUst.notes:
             inserts = [str(count), note.lyric, note.parentLyric]
+
+            # add the index, the lyric, and the lyric found in the grid
             for insert in inserts:
                 item = QtWidgets.QTableWidgetItem()
                 item.setText(insert)
                 self.tblParserOutput.setItem(count, groupCount, item)
                 groupCount += 1
 
+            # concatenate the syllables to the psuedo VCCV format
             sylls = ""
             for subNote in note.subNotes:
                 sylls = sylls + "," + subNote.lyric if sylls != "" else subNote.lyric
 
-            #if note.lyric == "R" and len(note.subNotes) == 1:
-            #    sylls = "R"
-
+            # add the row into the group
             item = QtWidgets.QTableWidgetItem()
             item.setText(sylls)
             self.tblParserOutput.setItem(count, 3, item)
             groupCount = 0
             count += 1
 
+    # used by the updateDictionary button on the Errors page. Adds whatever fixes the user made into the dictionary if they're valid
     def addWordsToDictionary(self):
-        # self.testPrinting()
         rowCount = self.tblErrors.rowCount()
+        # for each row check if the user tried to fix the word If they did and the word fits, put it in the dictionary
         for i in range(0, rowCount):
             inSyll = self.tblErrors.item(i, 2).text()
-            print("Testing %s with length %i" %(inSyll, self.myParser.missingWords[i].numSylls))
             if len(inSyll) > 0 and len(inSyll.split(":")) == self.myParser.missingWords[i].numSylls:
-                print("We're gonna add %s it to the dicitonary for %s" %(self.myParser.missingWords[i].lyric, inSyll))
                 self.myParser.missingWords[i].fixedSylls = inSyll
                 self.myParser.myTrie.insertWord(self.myParser.missingWords[i].lyric, [inSyll])
                 self.tblErrors.removeRow(i)
 
+        # update the Errors tab with the current number of errors
         if self.tblErrors.rowCount() > 0:
             self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabError),
                                   "Errors (" + str(self.tblErrors.rowCount()) + ")")
@@ -353,10 +353,14 @@ class mainWindow(object):
             self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabError),
                                       "Errors")
 
+    # used by the "Update Dictionary and Parse" button on the Errors tab. In addition to adding the word into the dictionary,
+    # update the UST wherever the missing word originated.
     def addWordsToDictionaryAndUpdate(self):
-        # self.testPrinting()
         rowCount = self.tblErrors.rowCount()
         delCount = 0
+
+        # loop through each row in the errors page. If the user tried to fix a word then insert it into the dictionary
+        # and fix whatever note triggered the error
         for i in range(0, rowCount):
             inSyll = self.tblErrors.item(i - delCount, 2).text()
             if len(inSyll) > 0 and len(inSyll.split(":")) == self.myParser.missingWords[i].numSylls:
@@ -365,6 +369,8 @@ class mainWindow(object):
                 self.myParser.parseFixedVCCV(self.myParser.missingWords[i])
                 self.tblErrors.removeRow(i - delCount)
                 delCount += 1
+            # if no fix was made, then see if the word was added either through the dictionary or an earlier note in the
+            # function. If so update the note based on what's in the dictionary.
             elif len(inSyll) == 0:
                 tempSylls = self.myParser.getSyllables(self.myParser.myTrie.getWord(self.myParser.missingWords[i].lyric), self.myParser.missingWords[i].numSylls)
                 if tempSylls is not None:
@@ -373,6 +379,7 @@ class mainWindow(object):
                     self.tblErrors.removeRow(i - delCount)
                     delCount += 1
 
+        # update the Error tab text with the number of errors
         if self.tblErrors.rowCount() > 0:
             self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabError),
                                   "Errors (" + str(self.tblErrors.rowCount()) + ")")
@@ -380,37 +387,99 @@ class mainWindow(object):
             self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabError),
                                       "Errors")
 
+        # update the parser grid based
         self.updateParserTable()
 
+    # used to update any words in the dictionary that had their pronunciation changed
     def updateDictionary(self):
         rowCount = self.tblDictionary.rowCount()
 
-        for i in self.myDictionary:
-            print("Word: %s Pronunciation: %s numSylls: %s" %(i.word, i.pronunciation, i.numSylls))
-
+        # loops through each row. If the row doesn't equal the original, try to parse the input
         for index in range(0, rowCount):
             item = self.tblDictionary.item(index, 1).text()
+            # split the input on "|" to split any multiple definitions
             if item != self.myDictionary[index].pronunciation:
-                print("index = %i: %s did not equal %s's old pronunciation %s" %(index, item, self.myDictionary[index].word, self.myDictionary[index].pronunciation))
                 inserts = item.split("|")
+                # if the insert at 0 doesn't equal the previous pronunciation then replace it
                 if inserts[0] != self.myDictionary[index].pronunciation:
-                    print("Updating %s with insert %s" %(self.myDictionary[index].word, inserts[0]))
                     self.myParser.myTrie.updateWord(self.myDictionary[index].word,
                                                     self.myDictionary[index].pronunciation, inserts[0])
+                # add any additional pronunciations to the dictionary
                 if len(inserts) > 1:
-                    print("Adding to %s: %s" %(self.myDictionary[index].word, inserts[1:]))
                     self.myParser.myTrie.insertWord(self.myDictionary[index].word, inserts[1:])
-            else:
-                print("Nothing was changed for %s's pronunciation %s" %(self.myDictionary[index].word, self.myDictionary[index].pronunciation))
 
         self.checkWord()
 
+    # used for the "Parse" button on the parser tab. Final parsing for the UST.
     def handleParseButton(self):
         index = self.cmbLanguageSetting.currentIndex()
 
         if index == 0:
-            self.parseUST()
+            # updates the Ust with any changes the user made on the Parser page
+            self.updateUst()
+            # formats the notes into the VCCV format
+            self.formatVCCVNotes()
+            self.myParser.isParsed = True
 
+    # updates the UST based on whatever the user changed on the parser tab. Changes to syllables replaces the note's syllables
+    # while changing the lyric updates the lyric.
+    def updateUst(self):
+
+        canParse = -1
+        # loop through all of the notes besides the perv and next notes
+        for i in range(1, self.tblParserOutput.rowCount()):
+            # canParse used to prevent reformatting multi-syllable notes, so ignore them and the last "next" note.
+            if i >= canParse and self.myParser.myUst.notes[i].state != "next":
+
+                # get the user's word, syllables, and the note's original syllables
+                inWord = self.tblParserOutput.item(i, 2).text()
+                inSyllables = self.tblParserOutput.item(i, 3).text()
+                tempSyll = ""
+                for note in self.myParser.myUst.notes[i].subNotes:
+                    tempSyll = tempSyll + note.lyric + ","
+
+                # if the syllables do not equal the original syllables, replace them
+                if inSyllables != tempSyll[:-1]:
+                    self.myParser.myUst.notes[i].subNotes.clear()
+                    self.myParser.createVCCVNotes(self.myParser.myUst.notes[i], inSyllables)
+                # otherwise if the word does not match the original lyric, reparse the note.
+                elif inWord != self.originalParse[i]:
+                    index = i
+                    numSylls = 0
+                    totalLen = 0
+                    finalLyric = ""
+                    endLoop = True
+                    # loop through the notes until you reach the end or find a non-rest lyric that doesn't end with "-".
+                    # any non-rest lyrics have their lyrics added to the finalLyric and are counted for # syllables
+                    while index < self.tblParserOutput.rowCount() - 1 and endLoop:
+                        currLyric = self.tblParserOutput.item(index, 2).text()
+                        if len(currLyric) > 0:
+                            if currLyric != "-" and currLyric.lower() != 'r':
+                                numSylls += 1
+                                finalLyric = finalLyric + currLyric[:-1] if currLyric[-1] == "-" else finalLyric + currLyric
+                                if currLyric[-1] != "-" and currLyric.lower() != 'r':
+                                    endLoop = False
+
+                            index += 1
+                            totalLen += 1
+
+                    # create a missingNote object to format the information for fixing the notes
+                    myMissingNote = missingNote(inLyric = finalLyric, inNumSylls= numSylls, inStartNote=index - totalLen, inRange= totalLen)
+
+                    # if the finalLyric is an actual word and we were able to find a valid pronunciation, parse it
+                    if finalLyric != "" and self.myParser.getSyllables(
+                            self.myParser.myTrie.getWord(finalLyric), numSylls) is not None:
+                        myMissingNote.fixedSylls = self.myParser.getSyllables(self.myParser.myTrie.getWord(finalLyric), numSylls)
+                        self.myParser.parseFixedVCCV(myMissingNote, fullClear=True)
+                    # otherwise treat it like a mixxing word
+                    else:
+                        self.myParser.missingWords.append(myMissingNote)
+
+                    # prevent editing notes until we reach the end of the current lyric
+                    canParse = index
+
+
+    # dialog used to import any words for the dictionary
     def openDicitonaryDialog(self):
         myDialog = dictionaryDialog()
         myDialog.exec_()
@@ -421,14 +490,16 @@ class mainWindow(object):
                 self.myParser.addWordToTrie(line)
             elif len(line) > 0:
                 splitLine = line.split(" ")
-                print("I got %s" %splitLine)
                 self.myParser.myTrie.insertWord(splitLine[0], splitLine[1].split("|"))
 
+    # formats the nots for the parser
+    def formatVCCVNotes(self):
+        for i in range(1, len(self.myParser.myUst.notes)):
+            self.myParser.formatNotes(self.myParser.myUst.notes[i-1], self.myParser.myUst.notes[i])
 
+        self.updateParserTable()
 
-
-
-
+    # testing function, ignore
     def testPrinting(self):
         rowCount = self.tblErrors.rowCount()
         colCount = self.tblErrors.columnCount()
@@ -436,32 +507,40 @@ class mainWindow(object):
             for j in range(0, colCount):
                 print("At %i, %i I got %s" %(i, j, self.tblErrors.item(i, j).text()))
 
+    # on finishing the UST, overrite the UST and dictionary files.
     def closeUST(self):
         self.myParser.finishPlugin()
         self.myParser.myTrie.printTrieToFile("dictionary.txt")
         window.close()
 
+    # saves the current dictionary to the dictionary file
     def saveDictionary(self):
         self.myParser.myTrie.printTrieToFile("dictionary.txt")
 
+    # on closing the window just save the dictionary
     def closeWindow(self):
-        self.myParser.myTrie.printTrieToFile("dictionary.txt")
+        self.saveDictionary()
         window.close()
 
+# dialog used to import user data
 class dictionaryDialog(QDialog, Ui_Dialog):
     def __init__(self, parent=None):
         QDialog.__init__(self, parent)
         self.setupUi(self)
 
+# main app; parses the ust and initializes all of the tables
 class myApp(QMainWindow):
     def __init__(self):
         super().__init__()
         self.ui =  mainWindow()
         self.ui.setupUi(self)
         # self.ui.loadDictionary()
-        #self.ui.parseUST()
+        self.ui.parseUST()
+        for i in range(0, self.ui.tblParserOutput.rowCount()):
+            self.ui.originalParse.append(self.ui.tblParserOutput.item(i, 2).text())
         self.show()
 
+# used to store the data regarding the initial data stored in the dictionary
 class dictionaryItem():
     def __init__(self, inWord = None, inPronunciation = None, inNumSylls = 0):
         self.__word = inWord
@@ -489,15 +568,8 @@ class dictionaryItem():
     def numSylls(self, inNumSylls):
         self.__numSylls = inNumSylls
 
-def addWordToTrie(str, myTrie):
-    "_word: syll"
-    halfIndex = str.find(':')
 
-    if halfIndex >= 0:
-        word = str[1:halfIndex]
-        syllables = str[halfIndex + 2:-1].split("|")
-        myTrie.insertWord(word, syllables)
-
+# opens app
 testApp = QApplication(sys.argv)
 window = myApp()
 window.show()

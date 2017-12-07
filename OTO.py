@@ -66,15 +66,18 @@ class Oto:
 
         return None
 
+    # sees if an otoline was stored in the cache. Return it, otherwise return None
     def checkDict(self, inLyric, prefix, suffix):
         if prefix + inLyric + suffix in self.__myDict:
             return self.__myDict[prefix + inLyric + suffix]
 
         return None
 
+    # put an otoline in our cache on the given sound, prefix, and suffix.
     def setLyricInDict(self, inLyric, prefix, suffix):
         if prefix + inLyric + suffix not in self.__myDict:
             self.__myDict[prefix + inLyric + suffix] = self.getOtoLine(inLyric, prefix, suffix)
+            
 # otoLine: contains the information stored in a single line of oto. The data is then stored as private variables that
 # can be accessed through property-defined getters and setters
 class OtoLine:
