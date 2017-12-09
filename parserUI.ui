@@ -91,6 +91,19 @@
        </property>
       </item>
      </widget>
+     <widget class="QPushButton" name="btnUpdateParser">
+      <property name="geometry">
+       <rect>
+        <x>600</x>
+        <y>532</y>
+        <width>93</width>
+        <height>28</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Update Table</string>
+      </property>
+     </widget>
     </widget>
     <widget class="QWidget" name="tabError">
      <attribute name="title">

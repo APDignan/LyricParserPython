@@ -35,7 +35,43 @@ class Ui_Dialog(object):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
 
+class Ui_dlogSettings(object):
+    def setupUi(self, dlogSettings):
+        dlogSettings.setObjectName("dlogSettings")
+        dlogSettings.resize(420, 158)
+        self.buttonBox = QtWidgets.QDialogButtonBox(dlogSettings)
+        self.buttonBox.setGeometry(QtCore.QRect(60, 110, 341, 32))
+        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
+        self.buttonBox.setObjectName("buttonBox")
+        self.ckbxFullLen = QtWidgets.QCheckBox(dlogSettings)
+        self.ckbxFullLen.setGeometry(QtCore.QRect(30, 30, 301, 20))
+        self.ckbxFullLen.setObjectName("ckbxFullLen")
+        self.ckbxBlendVowels = QtWidgets.QCheckBox(dlogSettings)
+        self.ckbxBlendVowels.setGeometry(QtCore.QRect(30, 60, 281, 20))
+        self.ckbxBlendVowels.setObjectName("ckbxBlendVowels")
+        self.btnSaveSettings = QtWidgets.QPushButton(dlogSettings)
+        self.btnSaveSettings.setGeometry(QtCore.QRect(30, 110, 93, 28))
+        self.btnSaveSettings.setObjectName("btnSaveSettings")
+        self.btnSaveSettings.clicked.connect(self.saveSettings)
 
+        self.retranslateUi(dlogSettings)
+        self.buttonBox.accepted.connect(dlogSettings.accept)
+        self.buttonBox.rejected.connect(dlogSettings.reject)
+        QtCore.QMetaObject.connectSlotsByName(dlogSettings)
+
+    def retranslateUi(self, dlogSettings):
+        _translate = QtCore.QCoreApplication.translate
+        dlogSettings.setWindowTitle(_translate("dlogSettings", "Settings"))
+        self.ckbxFullLen.setText(_translate("dlogSettings", "Extend endings based on Consonant Field"))
+        self.ckbxBlendVowels.setText(_translate("dlogSettings", "Blend Vowels with consonants"))
+        self.btnSaveSettings.setText(_translate("dlogSettings", "Save Settings"))
+
+    def saveSettings(self):
+        settingsFile = open("settings.txt", "w")
+
+        settingsFile.write("fulllen true\n") if self.ckbxFullLen.isChecked() else settingsFile.write("fulllen false\n")
+        settingsFile.write("blendvowels true\n") if self.ckbxBlendVowels.isChecked() else settingsFile.write("blendvowels false\n")
 
 class mainWindow(object):
     def setupUi(self, MainWindow):
@@ -140,6 +176,7 @@ class mainWindow(object):
         self.ltxtDictionaryInput.setGeometry(QtCore.QRect(80, 500, 341, 22))
         self.ltxtDictionaryInput.setText("")
         self.ltxtDictionaryInput.setObjectName("ltxtDictionaryInput")
+        self.ltxtDictionaryInput.returnPressed.connect(self.checkWord)
         self.btnDictionaryUpdate = QtWidgets.QPushButton(self.tabDictionary)
         self.btnDictionaryUpdate.setGeometry(QtCore.QRect(595, 500, 93, 28))
         self.btnDictionaryUpdate.setObjectName("btnDictionaryUpdate")
@@ -159,8 +196,6 @@ class mainWindow(object):
         self.menubar.setObjectName("menubar")
         self.menuFile = QtWidgets.QMenu(self.menubar)
         self.menuFile.setObjectName("menuFile")
-        self.menuSettings = QtWidgets.QMenu(self.menubar)
-        self.menuSettings.setObjectName("menuSettings")
         self.menuHelp = QtWidgets.QMenu(self.menubar)
         self.menuHelp.setObjectName("menuHelp")
         MainWindow.setMenuBar(self.menubar)
@@ -172,10 +207,13 @@ class mainWindow(object):
         self.mnuSaveDictionary = QtWidgets.QAction(MainWindow)
         self.mnuSaveDictionary.setObjectName("mnuSaveDictionary")
         self.mnuSaveDictionary.triggered.connect(self.saveDictionary)
+        self.mnuSettings = QtWidgets.QAction(MainWindow)
+        self.mnuSettings.setObjectName("mnuSettings")
+        self.mnuSettings.triggered.connect(self.openSettingsDialog)
         self.menuFile.addAction(self.actionSettings)
+        self.menuFile.addAction(self.mnuSettings)
         self.menuFile.addAction(self.mnuSaveDictionary)
         self.menubar.addAction(self.menuFile.menuAction())
-        self.menubar.addAction(self.menuSettings.menuAction())
         self.menubar.addAction(self.menuHelp.menuAction())
 
         self.retranslateUi(MainWindow)
@@ -218,10 +256,10 @@ class mainWindow(object):
         self.btnConfirm.setText(_translate("MainWindow", "Confirm"))
         self.btnCancel.setText(_translate("MainWindow", "Cancel"))
         self.menuFile.setTitle(_translate("MainWindow", "File"))
-        self.menuSettings.setTitle(_translate("MainWindow", "Settings"))
         self.menuHelp.setTitle(_translate("MainWindow", "Help"))
         self.actionSettings.setText(_translate("MainWindow", "Close"))
         self.mnuSaveDictionary.setText(_translate("MainWindow", "Save Dictionary"))
+        self.mnuSettings.setText(_translate("MainWindow", "Settings"))
 
     # loads the dictionary file into the parser
     def loadDictionary(self):
@@ -237,11 +275,11 @@ class mainWindow(object):
         self.myDictionary.clear()
 
         # if the word ends with a "-", look up all of the words that start with the substring and put them on the grid
-        if len(inWord) < 100 and inWord[-1] == "-" and inWord != "-":
+        if len(inWord) > 0 and len(inWord) < 100 and inWord[-1] == "-" and inWord != "-":
             inWord = inWord[:-1]
             inserts = self.myParser.myTrie.getSubTrie(inWord)
             # loop through each word and insert them into the grid
-            if len(inserts) > 2:
+            if inserts is not None and len(inserts) > 2:
                 self.tblDictionary.setRowCount(len(inserts) / 3)
                 count = 0
                 groupCount = 0
@@ -259,6 +297,8 @@ class mainWindow(object):
                         tempDictionaryItem = list()
                         groupCount = 0
                         count += 1
+            else:
+                self.tblDictionary.setRowCount(0)
         # if the word exists put it in the dictionary table
         elif len(inWord) < 100 and self.myParser.myTrie.getWord(inWord) != "":
             pronunciations = self.myParser.myTrie.getWord(inWord)
@@ -421,6 +461,11 @@ class mainWindow(object):
             self.formatVCCVNotes()
             self.myParser.isParsed = True
 
+            # print("\n\nPrinting Notes after Parsing")
+            # for note in self.myParser.myUst.notes:
+            #     for subNote in note.subNotes:
+            #         note.printNote()
+
     # updates the UST based on whatever the user changed on the parser tab. Changes to syllables replaces the note's syllables
     # while changing the lyric updates the lyric.
     def updateUst(self):
@@ -479,18 +524,78 @@ class mainWindow(object):
                     canParse = index
 
 
+    #_word: word1|word2
+    #word word1|word2
+
+    def openSettingsDialog(self):
+        mySettings = settingsDialog()
+        if self.myParser.fullLen == True:
+            mySettings.ckbxFullLen.setChecked(True)
+
+        if self.myParser.blendVowels == True:
+            mySettings.ckbxBlendVowels.setChecked(True)
+
+        mySettings.exec_()
+        if mySettings.result() == 1:
+            if mySettings.ckbxFullLen.isChecked():
+                self.myParser.fullLen = True
+            else:
+                self.myParser.fullLen = False
+
+            if mySettings.ckbxBlendVowels.isChecked():
+                self.myParser.blendVowels = True
+            else:
+                self.myParser.blendVowels = False
+
     # dialog used to import any words for the dictionary
     def openDicitonaryDialog(self):
         myDialog = dictionaryDialog()
         myDialog.exec_()
-        txt = myDialog.plainTextEdit.toPlainText()
-        for line in txt.split("\n"):
-            if len(line) > 0 and line[0] == "_":
-                line = line + "\n"
-                self.myParser.addWordToTrie(line)
-            elif len(line) > 0:
-                splitLine = line.split(" ")
-                self.myParser.myTrie.insertWord(splitLine[0], splitLine[1].split("|"))
+        if myDialog.result() == 1:
+            txt = myDialog.plainTextEdit.toPlainText()
+            dictionaryList = list()
+            currWord = ""
+            for line in txt.split("\n"):
+                if len(line) > 0 and line[0] == "_":
+                    line = line + "\n"
+                    currWord = line[1:].split(" ")
+                    currWord = currWord[0][:-1]
+                    self.myParser.addWordToTrie(line)
+                elif len(line) > 0:
+                    splitLine = line.split(" ")
+                    if splitLine[0][-1] == ":":
+                        splitLine[0] = splitLine[0][:-1]
+
+                    self.myParser.myTrie.insertWord(splitLine[0], splitLine[1].split("|"))
+                    currWord = splitLine[0]
+                syllList = line.split(" ")
+                if len(syllList) > 1:
+                    syllList = syllList[1].split("|")
+                    for syll in syllList:
+                        dictionaryList.append(currWord)
+                        dictionaryList.append(syll.split("\n")[0])
+                        dictionaryList.append(str(len(syll.split(":"))))
+
+            self.myDictionary.clear()
+
+            if len(dictionaryList) > 2:
+                self.tblDictionary.setRowCount(len(dictionaryList) / 3)
+
+                count = 0
+                groupCount = 0
+                tempDictionaryList = list()
+                for insert in dictionaryList:
+                    item = QtWidgets.QTableWidgetItem()
+                    item.setText(insert)
+                    self.tblDictionary.setItem(count, groupCount, item)
+                    tempDictionaryList.append(insert)
+                    groupCount += 1
+                    if groupCount > 2:
+                        self.myDictionary.append(dictionaryItem(tempDictionaryList[0], tempDictionaryList[1], tempDictionaryList[2]))
+                        tempDictionaryList.clear()
+                        groupCount = 0
+                        count += 1
+
 
     # formats the nots for the parser
     def formatVCCVNotes(self):
@@ -524,6 +629,11 @@ class mainWindow(object):
 
 # dialog used to import user data
 class dictionaryDialog(QDialog, Ui_Dialog):
+    def __init__(self, parent=None):
+        QDialog.__init__(self, parent)
+        self.setupUi(self)
+
+class settingsDialog(QDialog, Ui_dlogSettings):
     def __init__(self, parent=None):
         QDialog.__init__(self, parent)
         self.setupUi(self)
@@ -570,7 +680,8 @@ class dictionaryItem():
 
 
 # opens app
-testApp = QApplication(sys.argv)
-window = myApp()
-window.show()
-sys.exit(testApp.exec_())
+if __name__ == "__main__":
+    testApp = QApplication(sys.argv)
+    window = myApp()
+    window.show()
+    sys.exit(testApp.exec_())

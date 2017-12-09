@@ -146,7 +146,8 @@ class trieNode:
                 self.dictionary[inChar[0]] = trieNode(syll)
             else:
                 for testSyll in syll:
-                    if testSyll not in self.__syllables:
+                    print("Testing %s when I have syllables %s" %(testSyll, self.dictionary[inChar[0]].syllables))
+                    if testSyll not in self.dictionary[inChar[0]].syllables:
                         self.dictionary[inChar[0]].setSyllables(testSyll)
         else:
             if inChar[0] not in self.dictionary:

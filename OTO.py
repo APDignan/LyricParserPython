@@ -77,7 +77,7 @@ class Oto:
     def setLyricInDict(self, inLyric, prefix, suffix):
         if prefix + inLyric + suffix not in self.__myDict:
             self.__myDict[prefix + inLyric + suffix] = self.getOtoLine(inLyric, prefix, suffix)
-            
+
 # otoLine: contains the information stored in a single line of oto. The data is then stored as private variables that
 # can be accessed through property-defined getters and setters
 class OtoLine:

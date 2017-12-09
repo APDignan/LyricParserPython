@@ -137,12 +137,15 @@ class Ust:
         setting = ""
         try:
             outFile = open(fileName, 'w')
+            #checkPitches = open("pitches.txt", "w")
 
             # write the version and setting information using the settingsKey list for order
             outFile.write('[#VERSION]\n' + self.__settings['[#VERSION]'] + '\n' + '[#SETTING]\n')
+            #checkPitches.write('[#VERSION]\n' + self.__settings['[#VERSION]'] + '\n' + '[#SETTING]\n')
             errState = 1
             for setting in self.__settingsKeys:
                 outFile.write(setting + '=' + self.__settings[setting] + '\n')
+                #checkPitches.write(setting + '=' + self.__settings[setting] + '\n')
 
             # get the index to label the notes as well as the list of parameters that had split data
             currentIndex = self.__startValue
@@ -150,29 +153,37 @@ class Ust:
 
             errState = 2
             # for each note, write either the note number or the prev/next tags if it was the prev/next note.
+
             for currNote in self.__notes:
                 for subNote in currNote.subNotes:
-                    if subNote.state == "prev" and self.__hasPrev:
+                    if currNote.state == "prev" and self.__hasPrev:
                         outFile.write('[#PREV]\n')
-                    elif subNote.state == "next" and self.__hasNext:
+                        #checkPitches.write('[#PREV]\n')
+                    elif currNote.state == "next" and self.__hasNext:
                         outFile.write('[#NEXT]\n')
+                        #checkPitches.write('[#NEXT]\n')
                     else:
-                        #print("Current index is " + str(currentIndex))
                         outFile.write(convertNoteNumber(currentIndex) + '\n')
+                        #checkPitches.write(convertNoteNumber(currentIndex) + '\n')
                         currentIndex += 1
 
                     # for each parameter in the note, write the parameter. Any paramter in splitProperties has its properties
                     # reformatted for the ust
                     for property in subNote.getPropertiesKeys():
                         outFile.write(property + '=')
-                        if property in splitProperties:
-                            currProperty = ""
-                            for val in subNote.getProperty(property):
-                                currProperty = (currProperty + val) if property == 'Flags' else (currProperty + val + ',')
-                            outFile.write((currProperty + '\n') if property == 'Flags' else (currProperty[:-1] + '\n'))
-                        else:
-                            outFile.write(subNote.getProperty(property) + '\n')
+                        #checkPitches.write(property + '=')
+                        # if property in splitProperties:
+                        #     currProperty = ""
+                        #     for val in subNote.getProperty(property):
+                        #         currProperty = (currProperty + val) if property == 'Flags' else (currProperty + val + ',')
+                        #     outFile.write((currProperty + '\n') if property == 'Flags' else (currProperty[:-1] + '\n'))
+                        #     checkPitches.write("For lyric %s and property %s I got %s\n" %(subNote.lyric, property, subNote.getProperty(property)))
+                        # else:
+                        outFile.write(subNote.getProperty(property) + '\n')
+                        #checkPitches.write(subNote.getProperty(property) + '\n')
                     noteCount += 1
+
+            #checkPitches.close()
 
         except Exception as err:
             if errState == 0:
@@ -295,7 +306,7 @@ class note:
         # sets default properties
         if default == True:
             genericProperties = {'Length': length, 'Lyric': lyric, 'NoteNum': pitch, 'Intensity': "100",
-                                 'Modulation': "0"}
+                                 'Modulation': "0", "PBS" : "0", "PBW" : "0", "PBY": "0"}
 
             for property in genericProperties:
                 self.setProperty(property, genericProperties[property])
@@ -322,23 +333,25 @@ class note:
             if inProperty not in self.__propertiesKeys:
                 self.__propertiesKeys.append(inProperty)
 
-            # if the param splits on commas, split it.
-            if inProperty in splitOnComma:
-                self.__properties[inProperty] = val.split(',')
-            # if we take in the Flags param, separate the flags whenever a number preceeds a letter
-            elif inProperty == 'Flags':
-                tempStr = ''
-                self.__properties[inProperty] = list()
-                for c in val:
-                    if len(tempStr) > 0 and tempStr[-1].isdigit() and c.isalpha():
-                        self.__properties[inProperty].append(tempStr)
-                        tempStr = c
-                    else:
-                        tempStr += c
-                self.__properties[inProperty].append(tempStr)
+            self.__properties[inProperty] = val
+
+            # # if the param splits on commas, split it.
+            # if inProperty in splitOnComma:
+            #     self.__properties[inProperty] = val.split(',')
+            # # if we take in the Flags param, separate the flags whenever a number preceeds a letter
+            # elif inProperty == 'Flags':
+            #     tempStr = ''
+            #     self.__properties[inProperty] = list()
+            #     for c in val:
+            #         if len(tempStr) > 0 and tempStr[-1].isdigit() and c.isalpha():
+            #             self.__properties[inProperty].append(tempStr)
+            #             tempStr = c
+            #         else:
+            #             tempStr += c
+            #     self.__properties[inProperty].append(tempStr)
             # otherwise we have a normal property that we can just add to the dictionary
-            else:
-                self.__properties[inProperty] = val
+            # else:
+
 
     # sets a property without splitting anything. Used for copying data from one note to another.
     def setPropertyLazy(self, inProperty, val, override = None):
@@ -474,11 +487,16 @@ class note:
         vowels = ['a', 'e', 'i', 'o', 'u', 'E', '9', '3', '@', 'A', 'I', 'O', '8', 'Q', '6', 'x', '&', '0', '1']
 
         index = len(self.lyric)
-        myLastConst = ""
-        while index > -1 and self.lyric[index - 1:index] not in vowels:
+
+        # lyric: iz
+        # index = 2
+
+        # index = 2, z
+        # index = 1, i
+        while index > 0 and self.lyric[index - 1:index] not in vowels:
             index -= 1
 
-        return self.lyric[index + 1:]
+        return self.lyric[index:]
 
     # split a lyric on it's vowel and returns the split lyric
     @property
@@ -526,7 +544,7 @@ def convertNoteNumber(inNum):
 
 
 # copies the content of one note to another. does NOT copy state or canEdit properties.
-def copyNote(inNote, lyric=None):
+def copyNote(inNote, lyric=None, location=""):
     newNote = note()
 
     for property in inNote.getPropertiesKeys():
