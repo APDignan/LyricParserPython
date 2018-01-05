@@ -52,6 +52,7 @@ class prefixMap:
                     tempList = list()
                     tempStr = ""
                     lineCount+= 1
+
         except Exception as err:
             raise ParserException("ERROR: (Reading Prefix.map) Could not read line %i" %lineCount)
         finally:
@@ -60,7 +61,6 @@ class prefixMap:
     def __blankMap(self):
         for i in range(24, 107):
             currNote = ustGen.intToNote(i)
-
             self.__pMap[currNote] = prefixMapItem()
 
     # printPrefixMap: debugging, prints the prefix map for each note
@@ -123,7 +123,6 @@ class prefixMap:
             print("Range Error: Tried to start at %s and end at %s" %(start, end))
 
 
-
 #prefixMapItem: used to hold the prefix and suffix data within the prefixMap in a clean manner. Pretty much just two values.
 class prefixMapItem:
 
@@ -144,14 +143,3 @@ class prefixMapItem:
     @suffix.setter
     def suffix(self, inSuffix):
         self.__suffix = inSuffix
-
-
-
-
-# testMap = prefixMap("C:\\Users\\Andrew\\Desktop\\Ryo CORE V3")
-# rangeMap = testMap.getRangePrefixValues("C1", "B7")
-# for keys in rangeMap:
-#     print("Key: %s Values %s %s" %(keys, rangeMap[keys].prefix, rangeMap[keys].suffix))
-# rangeMap = testMap.getRangePrefixValues("B7", "C1")
-# for keys in rangeMap:
-#     print("Key: %s Values %s %s" %(keys, rangeMap[keys].prefix, rangeMap[keys].suffix))

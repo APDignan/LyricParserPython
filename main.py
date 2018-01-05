@@ -5,9 +5,10 @@ from OTO import Oto, OtoLine
 import utauGen
 import traceback
 from Trie import trie
+import os
+from os import listdir
+from os.path import isfile, join
 from ParserException import ParserException
-
-#pyinstaller --onefile -F --dist C:\Users\Andrew\UTAU\plugins\PythonTest2 parserUi.py
 
 
 # parser class: Used by the UI to contain all of the information from UTAU, including the UST, Oto.ini, and prefix.map files.
@@ -16,26 +17,51 @@ class parser():
         self.__myUst = None
         self.__myOto = None
         self.__myPMap = None
-        self.__myTrie = trie()
+        self.__myTrie = dict()
+        self.__trieList = list()
+        self.__selectedTrie = "English"
         self.__isParsed = False
         self.__fullLen = False
         self.__blendVowels = False
-        with open("dictionary.txt") as myFile:
-            for line in myFile:
-                self.addWordToTrie(line)
-        myFile.close()
+        self.__ENG_VVBlend = False
 
-        settingsList = list()
+        # Loads dictionaries into the parser; searches dictionary folder for any .txt files to read in
+        dictionaryLocation = listdir(join(os.getcwd(), "dictionary"))
+        for item in dictionaryLocation:
+            if isfile(join(join(os.getcwd(), "dictionary"), item)):
+                fname = item[:-4]
+                self.getTrieStruct[fname] = trie(fname, join(join(os.getcwd(), "dictionary"), item))
+
+                # any .txt files are opened and read; if there's an order parameter then save it, then create the trie
+                testOrder = False
+                with open(join(join(os.getcwd(), "dictionary"), item)) as myFile:
+                    self.__selectedTrie = fname
+                    self.__trieList.append(fname)
+                    for line in myFile:
+                        if not testOrder:
+                            testOrder = True
+                            if line[0:5] == "order":
+                                self.getTrieStruct[fname].printOrder = line[6:-1]
+                        else:
+                            self.addWordToTrie(line)
+                myFile.close()
+            else:
+                print("Couldn't find file at %s" % join(join(os.getcwd(), "dictionary"), item))
+
+        # read in the settings from the .txt file
+        settingsDict = dict()
         with open("settings.txt") as settingsFile:
             for line in settingsFile:
-                settingsList.append(line.split(" ")[0])
-                settingsList.append(line.split(" ")[1][:-1])
+                settingsDict[line.split(" ")[0]] = line.split(" ")[1][:-1]
 
-        for i in range(1, len(settingsList)):
-            if settingsList[i - 1] == "fulllen" and settingsList[i] == "true":
-                self.fullLen = True
-            elif settingsList[i - 1] == "blendvowels" and settingsList[i] == "true":
-                self.blendVowels = True
+
+        # sets any settings
+        if "fulllen" in settingsDict and settingsDict["fulllen"] == "true":
+            self.fullLen = True
+        if "blendvowels" in settingsDict and settingsDict["blendvowels"] == "true":
+            self.blendVowels = True
+        if "defaultdictionary" in settingsDict and settingsDict["defaultdictionary"] in self.getTrieStruct:
+            self.__selectedTrie = settingsDict["defaultdictionary"]
         settingsFile.close()
 
         self.__missingWords = list()
@@ -61,18 +87,27 @@ class parser():
     def myPMap(self, inPMap):
         self.__myPMap = inPMap
 
+    # gets and sets the currently selected trie
     @property
     def myTrie(self):
-        return self.__myTrie
-
+        # if self.__selectedTrie in self.__myTrie:
+        return self.__myTrie[self.__selectedTrie]
     @myTrie.setter
     def myTrie(self, inTrie):
-        self.__myTrie = inTrie
+        # if self.__selectedTrie in self.__myTrie:
+        self.__myTrie[self.__selectedTrie] = inTrie
+
+    # gets the trie dictionary
+    @property
+    def getTrieStruct(self):
+        return self.__myTrie
+    # @myTrie.setter
+    # def myTrie(self, inTrie):
+    #     self.__myTrie = inTrie
 
     @property
     def isParsed(self):
         return self.__isParsed
-
     @isParsed.setter
     def isParsed(self, inParsed):
         self.__isParsed = inParsed
@@ -92,9 +127,29 @@ class parser():
         self.__blendVowels = inBlendVowels
 
     @property
+    def ENG_VVBlend(self):
+        return self.__ENG_VVBlend
+    @ENG_VVBlend.setter
+    def ENG_VVBlend(self, inBlendVowels):
+        self.__ENG_VVBlend = inBlendVowels
+
+    @property
+    def selectedTrie(self):
+        return self.__selectedTrie
+    @selectedTrie.setter
+    def selectedTrie(self, inSelectedTrie):
+        self.__selectedTrie = inSelectedTrie
+
+    @property
+    def trieList(self):
+        return self.__trieList
+    @trieList.setter
+    def trieList(self, inTrieList):
+        self.__trieList = inTrieList
+
+    @property
     def missingWords(self):
         return self.__missingWords
-
     @missingWords.setter
     def missingWords(self, inMissing):
         self.__missingWords.append(inMissing)
@@ -107,8 +162,8 @@ class parser():
             myErr = 1
             testFile = open(sys.argv[1])
             myErr = 2
-            if self.myUst is None:
-                self.myUst = Ust(sys.argv[1])
+
+            self.myUst = Ust(sys.argv[1])
             myErr = 3
             if self.myOto is None:
                 self.myOto = Oto(self.myUst.voiceDir)
@@ -120,7 +175,7 @@ class parser():
                 self.parseVCCV()
             except ParserException as err:
                 print(err.myMsg)
-                #traceback.print_exc()
+                traceback.print_exc()
             except Exception as err:
                 traceback.print_exc()
 
@@ -153,7 +208,7 @@ class parser():
         "_word: syll"
         halfIndex = inStr.find(':')
 
-        if halfIndex >= 0:
+        if halfIndex > 1:
             word = inStr[1:halfIndex]
             syllables = inStr[halfIndex + 2:-1].split("|")
             self.myTrie.insertWord(word, syllables)
@@ -173,6 +228,7 @@ class parser():
         currNote = ""
 
         try:
+            # loop through eacch note in the ust
             for currNote in self.myUst.notes:
                 # tempLen = the length the note has available to it rather than it's original length.
                 currNote.tempLen = currNote.length
@@ -184,18 +240,21 @@ class parser():
                 # if the note has a valid lyric and hasn't been parsed yet, try to parse it
                 elif len(currNote.lyric) > 0 and currNote.state != 'done' and currNote.state != 'MIA':
                     lyric = currNote.lyric.lower()
+                    tempSylls = self.getSyllables(self.myTrie.getWord(lyric), 1)
 
                     # if our lyric doesn't end with a "-", isn't a rest, and is in the trie, it's a single syllable word.
-                    tempSylls = self.getSyllables(self.myTrie.getWord(lyric), 1)
                     if lyric[-1] != '-' and self.notRest(lyric) and tempSylls is not None:
                         self.createVCCVNotes(currNote, tempSylls)
                         lastNote = index
                         currNote.parentLyric = lyric
-                    # otherwise if the note's lyric is not in the dictionary, write it to a file and set it to MIA
+
+                    # otherwise if the note's lyric is not in the dictionary, add it to the missingWords list and set it to MIA
                     elif self.notRest(lyric) and lyric[-1] != '-' and tempSylls is None:
                         self.missingWords = missingNote(inLyric=lyric, inNumSylls=1, inStartNote = index, inRange = 1)
+                        lastNote = index
                         currNote.state = "MIA"
                         currNote.subNotes = [copyNote(currNote, location="missingLyric")]
+
                     # if our note's lyric is "-" then it's an extender, so try to extend the previous true note if it's not MIA.
                     elif lyric == '-' and lastNote > -1 and self.myUst.notes[lastNote].state != "prev":
                         if self.myUst.notes[lastNote].state == "MIA":
@@ -207,6 +266,7 @@ class parser():
                             self.extendVCCVNote(self.myUst.notes[lastNote], currNote)
                             currNote.parentLyric = self.myUst.notes[lastNote].parentLyric + " (-)"
                             lastNote = index
+
                     # if the lyric ends with "-" then we have a multiple-syllable word.
                     elif lyric[-1] == '-':
                         counter = 0
@@ -234,6 +294,7 @@ class parser():
                             noteIndex = index
                             inCounter = 0
                             syllNum = 0
+
                             # loop through each of the notes we found
                             while inCounter < counter:
                                 # if the note was not a rest or an extender put the ith syllable in it
@@ -250,6 +311,7 @@ class parser():
                                     self.myUst.notes[index + inCounter].parentLyric = currLyric + " (-)"
                                     noteIndex = index + inCounter
                                     lastNote = noteIndex
+
                                 # finally it must be a rest, so treat it as such
                                 else:
                                     self.myUst.notes[index + inCounter].subNotes = [self.myUst.notes[index + inCounter]]
@@ -266,18 +328,16 @@ class parser():
                                     self.myUst.notes[index + inCounter].state = "MIA"
                                 self.myUst.notes[index + inCounter].subNotes = [copyNote(self.myUst.notes[index + inCounter], location="missingMulti")]
                                 inCounter += 1
-                    # If the lyric is 0, set it to a rest
-                    elif len(currNote.lyric) == 0:
-                        currNote.lyric = "R"
-                        currNote.subNotes = [copyNote(currNote, location="noLyric")]
-                        currNote.parentLyric = "R"
 
                     # Otherwise the note should be a rest
                     else:
+                        if len(currNote.lyric) == 0:
+                            currNote.lyric = "R"
                         currNote.subNotes = [copyNote(currNote, location="Rest")]
                         currNote.parentLyric = "R"
 
                 index += 1
+
         except ParserException as pErr:
             raise pErr
         except Exception as err:
@@ -339,6 +399,7 @@ class parser():
                 # fully clear the note if we're updating the UST from the parser tab
                 if fullClear:
                     self.myUst.notes[index].subNotes.clear()
+
                 self.clearNote(self.myUst.notes[index])
 
                 # if the lyric is not a rest or extender, place the ith syllabe in it
@@ -369,13 +430,13 @@ class parser():
 
     # when fixing currNote we have to remove the prior note's "-" and vowel ending if it's there and reformat the notes
     def fixPrevNote(self, prevNote, currNote):
-        if prevNote.subNotes[-1].lyric[-1:] == "-":
+        if prevNote.subNotes[-1].lyric[-1] == '-':
             prevNote.subNotes[-1].lyric = prevNote.subNotes[-1].lyric[:-1]
-            if prevNote.subNotes[-1].lastVowel != "":
-                if len(prevNote.subNotes) > 1:
-                    tempNotes = prevNote.subNotes[:-1]
-                    prevNote.subNotes.clear()
-                    prevNote.subNotes = tempNotes
+
+            if prevNote.subNotes[-1].lastVowel != "" and len(prevNote.subNotes) > 1:
+                tempNotes = prevNote.subNotes[:-1]
+                prevNote.subNotes.clear()
+                prevNote.subNotes = tempNotes
 
         self.formatNotes(prevNote, currNote)
 
@@ -392,24 +453,52 @@ class parser():
 
         self.formatNotes(currNote, nextNote)
 
-    # given a syllable of a word, break it up into it's individual parts
+    # # given a syllable of a word, break it up into it's individual parts
+    # def createVCCVNotes(self, inNote, syllables):
+    #     counter = 0
+    #     # loop on the syllables (divided by commas). The first note should be a copy of the original note
+    #     # while the rest should be generic to not copy the pitchbends
+    #     for syllable in syllables.split(","):
+    #         if counter == 0:
+    #             tempNote = copyNote(inNote, syllable, location="VCCVNote")
+    #         else:
+    #             tempNote = note(True, lyric=syllable, pitch=inNote.pitch)
+    #
+    #         # add the note with the syllable to the current note's subNotes
+    #         inNote.subNotes = [tempNote]
+    #         if inNote.syllables is None:
+    #             inNote.syllables = list()
+    #         inNote.syllables = inNote.syllables.append(syllable)
+    #         counter += 1
+
+    # create a VCCV Note based on the syllables given
     def createVCCVNotes(self, inNote, syllables):
-        counter = 0
-        # loop on the syllables (divided by commas). The first note should be a copy of the original note
-        # while the rest should be generic to not copy the pitchbends
-        for syllable in syllables.split(","):
-            if counter == 0:
-                tempNote = copyNote(inNote, syllable, location="VCCVNote")
-            else:
-                tempNote = note(True, lyric=syllable, pitch=inNote.pitch)
 
-            # add the note with the syllable to the current note's subNotes
-            inNote.subNotes = [tempNote]
-            if inNote.syllables is None:
-                inNote.syllables = list()
-            inNote.syllables = inNote.syllables.append(syllable)
-            counter += 1
+        # split the syllables based on the format C*"("V*")"C*
+        syllableParts = [syllables[:syllables.index("(")], syllables[syllables.index("(") + 1:syllables.index(")")], syllables[syllables.index(")") + 1:]]
+        tempNotes = list()
+        tempNotes.append(copyNote(inNote, syllableParts[0] + syllableParts[1], location="VCCVNote"))
 
+        # if we have an ending consonant, add the VC portion
+        if len(syllableParts[2]) > 0:
+            tempNotes.append(note(True, lyric=syllableParts[1] + syllableParts[2], pitch=inNote.pitch))
+
+        inNote.subNotes.clear()
+        inNote.subNotes = tempNotes
+
+        inNote.startConst = syllableParts[0]
+        inNote.vowel = syllableParts[1]
+        inNote.endConst = syllableParts[2]
+
+        # tempFile = open("checkStuff.txt", "a")
+        # tempFile.write("Syllable Parts: %s\n" %syllableParts)
+        # for thing in tempNotes:
+        #     tempFile.write("I got syllable %s" %thing.lyric)
+        # tempFile.write("On lyric %s, subNotes:\n" %(inNote.lyric))
+        # for subNote in inNote.subNotes:
+        #     tempFile.write("subNote: %s\n" %subNote.lyric)
+
+        # tempFile.close()
 
     # Extends a note currNote based off of the previous note's lyric.
     # Cases:
@@ -419,22 +508,28 @@ class parser():
     #       [[kla],[ak]] [-] => [kla] [[a], [ak]]
     def extendVCCVNote(self, prevNote, currNote):
         # list of vowels words can end with.
-        availableVowels = ['a', 'e', 'i', 'o', 'u', 'E', '9', '3', '@', 'A', 'I', 'O', '8', 'Q', '6', 'x', '9l', '8n', 'Ang']
 
-        prevVowel = prevNote.subNotes[0].lastVowel
+        if prevNote.vowel != "":
 
-        # double checks that the previous note has a vowel. If so make the currNote's subNotes equal to the vowel \
-        # and all but the first of prevNote's subNotes. Set prevNote's subNotes to just it's first subNote (CV or V)
-        if prevVowel != "" and prevVowel in availableVowels:
-            currNote.subNotes = [copyNote(currNote, prevVowel, location="ExtendVCCV")]
+            # set the current note's subnotes to the previous note's vowel + the previous note's subnotes[1:]
+            currNote.subNotes = [copyNote(currNote, prevNote.vowel, location="ExtendVCCV")]
             currNote.subNotes = prevNote.subNotes[1:]
-            tempNote = prevNote.subNotes[0]
-            prevNote.subNotes.clear()
-            prevNote.subNotes = [tempNote]
 
-            #Loop through the notes and fix the pitches
+            # remove all but the first subnote from prevNote
+            tempNote = currNote.subNotes[0]
+            currNote.subNotes.clear()
+            currNote.subNotes = [tempNote]
+
+            # set all of the consonant info
+            currNote.startConst = ""
+            currNote.vowel = prevNote.vowel
+            currNote.endConst = prevNote.endConst
+            prevNote.endConst = ""
+
+            # set pitches
             for myNote in currNote.subNotes:
                 myNote.pitch = str(currNote.pitch)
+
 
     # Given the previous note and current note, converts the lyric from Psuedo VCCV (CV,VC only) to VCCV. Includes adding "-"
     # to beginning and ends of notes, adding VV and V C transitions, and parsing CCV and VCC samples. All parsing is based
@@ -449,93 +544,126 @@ class parser():
             mySuffix = self.myPMap.getPrefixValue(currNote.strPitch).suffix if self.myPMap.getPrefixValue(currNote.strPitch).suffix is not None else ""
 
             errState = 1
-            # Start with checking the previous note; if it has a Vowel, try to either add a V C, VV, or V - note.
-            if self.notRest(prevNote.lyric, prevNote.state) and prevNote.subNotes[-1].lastVowel != "":
-                lastVowel = prevNote.subNotes[-1].lastVowel
 
-                # If the current note is not a rest, we want to see if we can add a V C or a VV.
-                if self.notRest(currNote.lyric, currNote.state) and prevNote.state != "prev":
-                    # if we have a consonant, add a V C note
-                    if len(currNote.subNotes[0].CCBeginning) > 0:
-                        tempCC = currNote.subNotes[0].CCBeginning
+            # if the previous and current notes are valid, try formatting them based on the selected dictionary
+            if self.notRest(prevNote.lyric, prevNote.state) and self.notRest(currNote.lyric, currNote.state) and prevNote.state != "prev":
+                prevVC = prevNote.vowel + prevNote.endConst
+                currCV = currNote.startConst + currNote.vowel
 
-                        # see what the longest V C sample is for our consonant (ex. get V sk instead of just V s)
-                        while len(tempCC) > 0 and self.checkOto(lastVowel + " " + tempCC, myPrefix, mySuffix) is None:
-                            tempCC = tempCC[:-1]
+                # 8n, 9l, Ang
+                # See if there are any VV or even VCV matches; if so add them and remove the previous note's ending
+                if len(prevVC) > 0 and len(currCV) > 0 and self.checkOto(prevVC + currCV, myPrefix, mySuffix) is not None and currNote.lyric != "-":
+                    currNote.subNotes[0].lyric = prevVC + currCV
+                    if len(prevNote.subNotes) > 1:
+                        del prevNote.subNotes[-1]
+                    currNote.state = "VV"
 
-                        # If we found a CC that works and the previous vowel is a single character (not 0r/1ng), create a new note for it
-                        if len(tempCC) > 0 and (len(lastVowel) == 1):
-                            prevNote.subNotes = [note(True, lyric=lastVowel + " " + tempCC, pitch=prevNote.subNotes[-1].pitch)]
-                        # otherwise just replace the previous ending with this
-                        elif len(tempCC) > 0:
-                            prevNote.subNotes[-1].lyric = lastVowel + " " + tempCC
-                    # otherwise currNote starts with a vowel, so see if you can add a VV. If not, try using consonants to merge them
-                    else:
-                        # if the last lyric was not "-" and we have a VV, add it
-                        if self.checkOto(lastVowel + currNote.subNotes[0].lyric, myPrefix, mySuffix) is not None and currNote.lyric != '-':
-                            currNote.subNotes[0].lyric = lastVowel + currNote.subNotes[0].lyric
-                        # otherwise if the last lyric's vowel and current lyric do not match, try to fix it.
-                        elif lastVowel != currNote.subNotes[0].lyric:
-                            if len(lastVowel) == 1:
-                                myConst = 'y'
-                                if lastVowel == 'o':
-                                    myConst = 'w'
-                                elif lastVowel == '3':
-                                    myConst = 'r'
-                                prevNote.subNotes = [note(True, lyric=lastVowel + " " + myConst, pitch=prevNote.subNotes[-1].pitch)]
-                                currNote.subNotes[0].lyric = myConst + currNote.subNotes[0].lyric
-                            elif len(lastVowel) == 2:
-                                myConst = lastVowel[-1]
-                                currNote.subNotes[0].lyric = myConst + currNote.subNotes[0].lyric
-                            elif len(lastVowel) == 3:
-                                currNote.subNotes[0].lyric = "_" + currNote.subNotes[0].lyric
+                # if we're using english, have selected ENG_VVBlend, and have differing vowels between the prevnad currnotes
+                # try to blend the vowels
+                elif self.ENG_VVBlend and len(prevVC) > 0 and len(currCV) > 0 and prevVC != currCV and prevVC == prevNote.vowel and currCV == currNote.vowel:
+                    if len(prevVC) == 1:
+                        myConst = 'y'
+                        if prevVC == 'o':
+                            myConst = 'w'
+                        elif prevVC == '3':
+                            myConst = 'r'
 
-                # if we are a rest, add the vowel ending to the previous one
-                elif prevNote.state != "prev":
-                    if len(lastVowel) > 1:
-                        prevNote.subNotes[-1].lyric = prevNote.subNotes[-1].lyric + "-"
-                    else:
-                        prevNote.subNotes = [note(True, lyric=lastVowel + "-", pitch=prevNote.subNotes[-1].pitch)]
-            # otherwise if currNote is a rest we need to add a "-"
-            elif self.notRest(prevNote.lyric, prevNote.state) and self.isRest(currNote.lyric, currNote.state):
-                prevNote.subNotes[-1].lyric = prevNote.subNotes[-1].lyric + "-"
-            elif self.notRest(prevNote.lyric, prevNote.state) and self.notRest(currNote.lyric, currNote.state) and self.blendVowels:
-                myLastConst = prevNote.subNotes[-1].lastConst
-                if myLastConst == "t" or myLastConst == "d":
-                    myLastConst = "dd"
-                if (len(myLastConst) == 1 or myLastConst == "dd") and prevNote.subNotes[-1].VBeginning != "" and self.checkOto(myLastConst + currNote.subNotes[0].lyric, myPrefix, mySuffix):
-                    currNote.subNotes[0].lyric = myLastConst + currNote.subNotes[0].lyric
-                    prevNote.subNotes[-1].lyric = prevNote.subNotes[-1].lyric[:-1] + " " + myLastConst
+                        prevNote.subNotes = [
+                            note(True, lyric=prevVC + " " + myConst, pitch=prevNote.subNotes[-1].pitch)]
+                        currNote.subNotes[0].lyric = myConst + currNote.subNotes[0].lyric
+                        currNote.startConst = myConst
+
+                    elif len(prevVC) == 2:
+                        myConst = prevVC[-1]
+                        currNote.subNotes[0].lyric = myConst + currNote.subNotes[0].lyric
+                        currNote.startConst = myConst
+
+                    elif len(prevVC) == 3:
+                        currNote.subNotes[0].lyric = "_" + currNote.subNotes[0].lyric
+
+                # Format any "V C" like blending for the previous note
+                elif len(prevVC) > 0 and len(currNote.startConst) > 0:
+                    tempCC = currNote.startConst
+
+                    # get the largest consonant from currnote that we have a "V C" recording in the oto
+                    while len(tempCC) > 0 and self.checkOto(prevVC + " " + tempCC, myPrefix, mySuffix) is None:
+                        tempCC = tempCC[:-1]
+
+                    if len(tempCC) > 0 and len(prevNote.subNotes) == 1:
+                        prevNote.subNotes = [
+                            note(True, lyric=prevVC + " " + tempCC, pitch=prevNote.subNotes[-1].pitch)]
+
+                    # otherwise just replace the previous ending with this
+                    elif len(tempCC) > 0:
+                        prevNote.subNotes[-1].lyric = prevVC + " " + tempCC
+
+                # try blending vowels with previous note consonants to make it sound better
+                if self.blendVowels:
+                    myLastConst = prevNote.endConst
+
+                    if myLastConst == "t" or myLastConst == "d":
+                        myLastConst = "dd"
+
+                    if (len(myLastConst) == 1 or myLastConst == "dd") and currNote.startConst == "" and self.checkOto(myLastConst + currNote.subNotes[0].lyric, myPrefix,
+                                                               mySuffix) is not None and self.checkOto(prevNote.subNotes[-1].lyric[:-1] + " " + myLastConst, myPrefix, mySuffix) is not None:
+                        currNote.startConst = myLastConst
+                        prevNote.endConst = ""
+                        currNote.subNotes[0].lyric = myLastConst + currNote.subNotes[0].lyric
+                        prevNote.subNotes[-1].lyric = prevNote.subNotes[-1].lyric[:-1] + " " + myLastConst
+
+            # add any ending dashes because the currnote is a rest
+            elif self.isRest(currNote.lyric, currNote.state) and self.notRest(prevNote.lyric, prevNote.state) and prevNote.state != "prev":
+                prevVC = prevNote.vowel + prevNote.endConst
+
+                if len(prevNote.subNotes) == 1 and prevVC == prevNote.vowel:
+                    prevNote.subNotes = [note(True, lyric=prevNote.vowel + "-", pitch=prevNote.subNotes[-1].pitch)]
+                else:
+                    prevNote.subNotes[-1].lyric = prevNote.subNotes[-1].lyric + "-"
 
             errState = 2
 
             # Try seeing if the note's CV and VC portions have been parsed and, if not, parse them
             # First test if the first subNote (always the psuedoVCCV CV) is in the oto. If not, then test it should be a CCV to be parsed
             if self.checkOto(currNote.subNotes[0].lyric, myPrefix, mySuffix) is None:
+
                 # if we start with at least 2 consonants and we're a valid note, then add the "proper" CCV notes
-                if len(currNote.subNotes[0].CCBeginning) > 1 and self.notRest(currNote.lyric, currNote.state):
-                    tempLyric = currNote.subNotes[0].CCBeginning if self.notRest(prevNote.lyric, prevNote.state) else "-" + currNote.subNotes[0].CCBeginning
+                if len(currNote.startConst) > 1 and self.notRest(currNote.lyric, currNote.state):
+                    tempLyric = currNote.startConst if self.notRest(prevNote.lyric, prevNote.state) else "-" + currNote.startConst
                     prevNote.subNotes = [note(True, lyric=tempLyric, pitch=prevNote.subNotes[-1].pitch)]
                     prevNote.subNotes[-1].state = "ccbeginning"
-                    currNote.subNotes[0].lyric = "_" + currNote.subNotes[0].lyric[len(currNote.subNotes[0].CCBeginning) - 1:]
+                    currNote.subNotes[0].lyric = "_" + currNote.subNotes[0].lyric[len(currNote.startConst) - 1:]
 
             errState = 3
+
             # Then test the second half of the note; test if it's in the oto and if not, try to parse it as a VCC
-            if len(currNote.subNotes) == 2 and self.notRest(currNote.subNotes[1].lyric, currNote.state) and self.checkOto(currNote.subNotes[1].lyric, myPrefix, mySuffix) is None:
+            # loop until you find a VC that works, then do old one to take 1ng into account
+            if len(currNote.endConst) > 0 and self.notRest(currNote.subNotes[-1].lyric, currNote.state) and self.checkOto(currNote.subNotes[-1].lyric, myPrefix, mySuffix) is None:
                 self.findCCEnding(currNote, myPrefix, mySuffix)
 
             errState = 4
 
             # add the "-" symbol to notes if the previous note is a rest or if the current lyric is a vowel following a non VV transition
-            if self.isRest(prevNote.subNotes[-1].lyric, prevNote.state):
-                if self.notRest(currNote.subNotes[0].lyric, currNote.state) and currNote.subNotes[0].lyric[0] != "_":
-                    currNote.subNotes[0].lyric = "-" + currNote.subNotes[0].lyric
-            elif self.notRest(currNote.subNotes[0].lyric, currNote.state):
-                if currNote.subNotes[0].VBeginning != "" and (prevNote.subNotes[-1].lastVowel == "" or prevNote.subNotes[-1].lastVowel[0] != currNote.subNotes[0].VBeginning):
-                    currNote.subNotes[0].lyric = "-" + currNote.subNotes[0].lyric
+            if self.checkOto("-" + currNote.subNotes[0].lyric, myPrefix, mySuffix) is not None \
+                    and (self.isRest(prevNote.subNotes[-1].lyric, prevNote.state) and currNote.state != "next" and
+                             (self.notRest(currNote.subNotes[0].lyric, currNote.state) and currNote.subNotes[0].lyric[0] != "_") or
+                             (self.notRest(currNote.subNotes[0].lyric, currNote.state) and currNote.state != "next" and (currNote.startConst == "" and (prevNote.endConst != "" or (prevNote.vowel + prevNote.endConst) + currNote.vowel != currNote.subNotes[0].lyric)))):
+                        currNote.subNotes[0].lyric = "-" + currNote.subNotes[0].lyric
+
+                # if self.isRest(prevNote.subNotes[-1].lyric, prevNote.state) and currNote.state != "next":
+                #     if self.notRest(currNote.subNotes[0].lyric, currNote.state) and currNote.subNotes[0].lyric[
+                #         0] != "_":
+                #         currNote.subNotes[0].lyric = "-" + currNote.subNotes[0].lyric
+                #
+                # elif self.notRest(currNote.subNotes[0].lyric, currNote.state) and currNote.state != "next":
+                #     if currNote.startConst == "" and (
+                #             prevNote.endConst != "" or (prevNote.vowel + prevNote.endConst) + currNote.vowel !=
+                #         currNote.subNotes[0].lyric):
+                #         currNote.subNotes[0].lyric = "-" + currNote.subNotes[0].lyric
 
             errState = 5
+
             self.getSizes(prevNote, currNote)
+
         except ParserException as pErr:
             raise pErr
         except Exception as err:
@@ -548,53 +676,75 @@ class parser():
             elif errState == 3:
                 raise ParserException(
                     "ERROR: (formattingNotes|currentNote VC) Could not parse current note \"%s\" VC section \"%s\" with err: %s" % (
-                    currNote.lyric, currNote.syllables[-1], err))
+                    currNote.lyric, currNote.subNotes[-1].lyric, err))
             elif errState == 4:
                 raise ParserException("ERROR: (formattingNotes|Adding \"-\") Could not add \"-\" to currNote \"%s\" with prevNote \"%s\" and err %s" %(currNote.subNotes[0], prevNote.subNotes[-1], err))
             else:
                 raise ParserException("ERROR: (formattingNotes|Unknown Error with getSizes) Could not do getSizes with currNote \"%s\" and prevNote \"%s\" with err %s" %(currNote.lyric, prevNote.lyric, err))
 
-    # finds the CC ending of a given currNote given what's in the oto
+
+    # get the CC endings of a note by splitting it's VCC into VC1-, C1C2-, C3...
     def findCCEnding(self, currNote, myPrefix, mySuffix):
+        # initialize by splitting the VC on it's last character
+        noteSplit = [currNote.vowel + currNote.endConst[:-1], currNote.endConst[-1]]
+        foundVCC = False
 
-        # splits the note's lyric into two parts: noteSplit[0] = V and noteSplit[1] = C (inz -> ["i", "nz"]
-        # sets up a tempList of notes to add back to currNote
-        noteSplit = currNote.subNotes[1].splitLyric
+        # loop through each possibility starting with the longest VC possible. If we don't find in our oto
+        # the entire breakdown, then try the next largest possibility, otherwise set it to MIA.
+        while len(noteSplit[0]) > 0 and not foundVCC:
+            found = self.findCCEndingRecHelper(noteSplit[0], noteSplit[1], currNote, myPrefix, mySuffix)
 
-        # only executes if we were able to split properly
-        if len(noteSplit) > 0:
-            tempList = list()
-            tempList.append(currNote.subNotes[0])
+            # if we didn't get the correct VCC breakdown, change noteSplit's values to the next largest possible one
+            if found is None:
+                noteSplit[1] = noteSplit[0][-1] + noteSplit[1]
+                noteSplit[0] = noteSplit[0][:-1]
 
-            # if the vowel is longer than one character and the VC is not in the oto, add the vowel to the new subNotes list and replace it with the last char
-            # ex: [0r, th] => (0r-) [r, th]
-            if len(noteSplit[0]) > 1 and self.checkOto(str(noteSplit[0]) + str(noteSplit[1]), myPrefix, mySuffix) is None:
-                tempList.append(copyNote(currNote, str(noteSplit[0]) + '-', location="findingVCCVEndingsLargeVowel"))
-                noteSplit[0] = noteSplit[0][1:]
-
-            # while we have at least some consonant left to test and the entire list together is not in the oto, add the first half plus the first char in
-            # the second half to the tempList and shift the first character in the right to the left.
-            # ex: [i, nz] -> (in-) [n, z]
-            while len(noteSplit[1]) > 0 and self.checkOto(str(noteSplit[0]) + str(noteSplit[1]), myPrefix, mySuffix) is None:
-                tempList.append(copyNote(currNote, str(noteSplit[0]) + str(noteSplit[1])[0:1] + "-", location="TestingCCEndings"))
-                noteSplit[0] = noteSplit[1][0]
-                noteSplit[1] = noteSplit[1][1:]
-
-            # if we added at least one thing then we "fixed" the CC (we add whatever's left to keep things consistant). Then replace the current note's subNOtes with tempList.
-            if len(tempList) > 1:
-                if len(noteSplit[1]) > 0:
-                    tempList.append(copyNote(currNote, noteSplit[0] + noteSplit[1], location="FinalizeCCEndings"))
+            # otherwise set the currNote's subnotes to what we got and exit th eloop
+            else:
                 currNote.subNotes.clear()
-                currNote.subNotes = tempList
+                currNote.subNotes = found
+                foundVCC = True
 
-    # sets the sizes for the previous note depending on the oto and the current note based off of the prior subNote's preutterance
+        # if we failed, set the last note's subNote to MIA, which really doesn't do anything
+        if not foundVCC:
+            currNote.subNotes[-1].state = "MIA"
+
+
+    # not really recursive, but helps find the CC ending. Tries to find valid breakdowns of the VCC ending, starting with
+    # the largest possibilities. If it doesn't find a valid breakdown for the given front/back, return none.
+    def findCCEndingRecHelper(self, front, back, currNote, myPrefix, mySuffix):
+
+        tempList = [currNote.subNotes[0]]
+
+        # loops through the VC, checking to find the largest correct VC- until we get to the end. If we exhaust all
+        # optinos, return None. Otherwise return the successful VCC breakdown.
+        while len(front) > 0:
+
+            #if we found a valid front portion, add it to the tempList
+            if self.checkOto(front, myPrefix, mySuffix) is not None:
+                tempList.append(note(default=True, lyric=front, pitch=currNote.pitch))
+
+                # if we completed the VCC, return the final note, otherwise test the rest of the characters we have left
+                if back == "":
+                    return tempList
+                else:
+                    tempList[-1].lyric = tempList[-1].lyric + "-"
+                    # front = front[len(currNote.vowel):] + back if front[0:len(currNote.vowel)] == currNote.vowel else front[1:] + back
+                    front = front[1:] + back
+                    back = ""
+            # if front was not valid, remove the last character and add it to back
+            else:
+                back = front[-1] + back
+                front = front[:-1]
+
+        return None
+
+    # sets the sizes for the previous note's subnotes depending on the oto and the current note.
     def getSizes(self, prevNote, currNote):
 
-        counter = 0
         sum = 0
         myPrefix = ""
         mySuffix = ""
-        currLyric = ""
         index = len(prevNote.subNotes) - 1
         errState = 0
 
@@ -603,7 +753,8 @@ class parser():
 
             # loop through all except the first subNote. Sets lengths based on the preutterance.
             while index > 0:
-                # if you're the last note, get the first note in the next note's lyric as well as the prefix and suffix data from that note
+
+                # if you're the last subnote, get the nextnote's first subnote's lyric as well as the prefix and suffix data from that note
                 if index == len(prevNote.subNotes) - 1:
                     if self.notRest(currNote.lyric, currNote.state):
                         currLyric = currNote.subNotes[0].lyric
@@ -611,31 +762,35 @@ class parser():
                         mySuffix = self.myPMap.getPrefixValue(currNote.strPitch).suffix if self.myPMap.getPrefixValue(currNote.strPitch).suffix is not None else ""
                     else:
                         currLyric = None
-                # otherwise if you're any note, set currLyric to the previous lyric and  get the prefixmap data
+
+                # otherwise if you're an other subnote, set currLyric to the previous subnote's lyric and  get the prefixmap data
                 else:
                     currLyric = prevNote.subNotes[index+1].lyric
                     myPrefix = self.myPMap.getPrefixValue(prevNote.strPitch).prefix if self.myPMap.getPrefixValue(prevNote.strPitch).prefix is not None else ""
                     mySuffix = self.myPMap.getPrefixValue(prevNote.strPitch).suffix if self.myPMap.getPrefixValue(prevNote.strPitch).suffix is not None else ""
 
-                # if the previous note was not a rest, get the preutterance
+
+                # Time to set sizes: if the currLryc was not a rest, the set the current subnote's length to it's preutterance
                 if currLyric is not None and self.checkOto(currLyric, myPrefix, mySuffix) is not None:
                     prevNote.subNotes[index].length = str(int(float(self.checkOto(currLyric, myPrefix, mySuffix).preutterance)))
-                # otherwise grow the previous note.
-                elif currLyric is not None and self.checkOto(currLyric, myPrefix, mySuffix) is not None:
-                    prevNote.subNotes[index].length = "30"
-                # otherwise if the currentLyric is a rest:
+
+                # otherwise if the currLyric is a rest:
                 elif currLyric is None and self.isRest(currNote.lyric):
-                    # if note is at least twice as long as a half note, take at most a half note + some.
+
+                    # if the current rest is large enough (>1920), increase prevNote's last note by a fixed amount and
+                    # adjust the tempLen's of currNote and PrevNote to the new values
                     if int(currNote.length) > (960 * 2):
                         prevNote.subNotes[index].length = "990"
                         currNote.tempLen = str(int(currNote.length) - int(prevNote.subNotes[index].length) + 30)
                         prevNote.tempLen = str(int(prevNote.tempLen) + int(prevNote.subNotes[index].length) - 30)
-                        # prevNote.subNotes[index].length, currNote.length, currNote.tempLen))
-                    # otherwise get about half of it. Try to check for any CC's
+
+                    # otherwise add about half of the rest to prevNote.
                     else:
                         prevNote.subNotes[index].length = str(30 + ((int(currNote.length) - sum) // 2)) if int(currNote.length) > 60 or len(currNote.subNotes) == 1  else "30"
                         currNote.tempLen = str(int(currNote.length) - int(prevNote.subNotes[index].length) + 30)
                         prevNote.tempLen = str(int(prevNote.tempLen) + int(prevNote.subNotes[index].length) - 30)
+
+                # otherwise just give a default length of 60
                 else:
                     prevNote.subNotes[index].length = "60" if int(prevNote.subNotes[index].length) > 120 else "30"
 
@@ -644,16 +799,24 @@ class parser():
 
 
             errState = 1
-            # if we have one more note but no room to fit it, divide the notes equally within the length
+
+            # once the initial sizes have been calculated besides the first subNote in prevNote, if we have one more note but no room to fit it,
+            # divide the notes equally within the length
             if sum >= int(prevNote.tempLen) and len(prevNote.subNotes) > 1 and self.notRest(prevNote.subNotes[0].lyric, prevNote.state):
                 sum = 0
-                # divide the available space between the notes
+
+                print("Note %s had to be divided when it had %i notes" %(prevNote.lyric, len(prevNote.subNotes)))
+                # loop through each subnote and give it an equal amount of space.
                 for myNote in prevNote.subNotes:
+                    print("On note %s changed size from %s to %s" %(myNote.lyric, myNote.length, str(int(prevNote.tempLen) // len(prevNote.subNotes))))
                     myNote.length = str(int(prevNote.tempLen) // len(prevNote.subNotes))
                     sum += int(myNote.length)
 
-                prevNote.subNotes[0].length = str(int(prevNote.subNotes[0].length) + (int(prevNote.tempLen) - sum))
-            # otherwise if we have at least one more note, add it with the remaining space
+                # add any extra space to the first note.
+                if int(prevNote.subNotes[0].length) + (int(prevNote.tempLen) - sum) > 0:
+                    prevNote.subNotes[0].length = str(int(prevNote.subNotes[0].length) + (int(prevNote.tempLen) - sum))
+
+            # otherwise if we have at least one more note and there's room, add it with the remaining space
             elif sum < int(prevNote.tempLen):
                 if prevNote.state != 'prev':
                     prevNote.subNotes[0].length = str(int(prevNote.tempLen) - sum)
@@ -670,23 +833,31 @@ class parser():
             errState = 2
 
             # try to fix sizes of things if we have room
-
             if self.fullLen:
-                if self.notRest(prevNote.lyric, prevNote.state) and self.notRest(currNote.lyric, currNote.state) and len(prevNote.lyric) > 1 and ' ' not in prevNote.subNotes[-1].lyric:
-                    if self.checkOto(prevNote.subNotes[-1].lyric, myPrefix, mySuffix) is not None and prevNote.subNotes[-1].state != "ccbeginning":
+                # if the final subnote is valid, not a V C, and is not a cc beginning, try to adjust it's length
+                if self.notRest(prevNote.lyric, prevNote.state) and self.notRest(currNote.lyric, currNote.state) and len(prevNote.lyric) > 1 and ' ' not in prevNote.subNotes[-1].lyric and (self.checkOto(prevNote.subNotes[-1].lyric, myPrefix, mySuffix) is not None and prevNote.subNotes[-1].state != "ccbeginning"):
+                        # fullLen is equal to the length of the area within the consonant block beyond the preutterance line.
                         fullLen = int(float(self.checkOto(prevNote.subNotes[-1].lyric, myPrefix, mySuffix).consonant)) - int(float(self.checkOto(prevNote.subNotes[-1].lyric, myPrefix, mySuffix).preutterance))
+
+                        # if that area doubled is still less than the CV's length, then add the fullLen length to the last note and subtract it from the first
                         if fullLen * 2 <= int(prevNote.subNotes[0].length):
                             prevNote.subNotes[0].length = str(int(prevNote.subNotes[0].length) - fullLen)
                             prevNote.subNotes[-1].length = str(int(prevNote.subNotes[-1].length) + fullLen)
-                        elif int(prevNote.subNotes[0].length) < fullLen and (int(prevNote.subNotes[0].length) + 60) * 2 <= int(prevNote.subNotes[0].length):
+
+                        # otherwise if the first subnote's length is less than fullLen but the last subnote's length + 60
+                        # and doubled is less than the first subnote's length, then take 60 length from the first note and give it to the note.
+                        elif int(prevNote.subNotes[0].length) < fullLen and (int(prevNote.subNotes[-1].length) + 60) * 2 <= int(prevNote.subNotes[0].length):
+                            print("First note is %s with len %s and last note is %s with len %s" %(prevNote.subNotes[0].lyric, prevNote.subNotes[0].length, prevNote.subNotes[-1].lyric, prevNote.subNotes[-1].length))
                             prevNote.subNotes[0].length = str(int(prevNote.subNotes[0].length) - 60)
                             prevNote.subNotes[-1].length = str(int(prevNote.subNotes[-1].length) + 60)
 
             errState = 3
 
+            # any CCbeginning notes have their pitches set to their parent lyric's pitch
             if currNote.subNotes[0].lyric[0] == "_" and len(prevNote.subNotes) > 1:
                 prevNote.subNotes[-1].pitch = currNote.subNotes[0].pitch
 
+            # if the current note is next, adjust it's length if need be.
             if currNote.state == "next":
                 currNote.subNotes[0].setProperty("Length", currNote.tempLen, True)
 
@@ -723,9 +894,11 @@ class parser():
 
     # checks the oto's cache to see if we've looked up a word already, and if not, add's it before retrieving it.
     def checkOto(self, inLyric, prefix, suffix):
+        # sees if the lyric info is in our cache; if not then try adding it
         if self.myOto.checkDict(inLyric, prefix, suffix) is None:
             self.myOto.setLyricInDict(inLyric, prefix, suffix)
 
+        # retrieve whatever was in the cache
         return self.myOto.checkDict(inLyric, prefix, suffix)
 
     # (testing function) prints all of the current notes and subnotes to the screen given a ust

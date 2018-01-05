@@ -17,18 +17,22 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
         Dialog.resize(400, 300)
+
         self.buttonBox = QtWidgets.QDialogButtonBox(Dialog)
         self.buttonBox.setGeometry(QtCore.QRect(30, 240, 341, 32))
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName("buttonBox")
+
         self.plainTextEdit = QtWidgets.QPlainTextEdit(Dialog)
         self.plainTextEdit.setGeometry(QtCore.QRect(30, 20, 331, 191))
         self.plainTextEdit.setObjectName("plainTextEdit")
 
         self.retranslateUi(Dialog)
+
         self.buttonBox.accepted.connect(Dialog.accept)
         self.buttonBox.rejected.connect(Dialog.reject)
+
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
     def retranslateUi(self, Dialog):
@@ -39,25 +43,31 @@ class Ui_dlogSettings(object):
     def setupUi(self, dlogSettings):
         dlogSettings.setObjectName("dlogSettings")
         dlogSettings.resize(420, 158)
+
         self.buttonBox = QtWidgets.QDialogButtonBox(dlogSettings)
         self.buttonBox.setGeometry(QtCore.QRect(60, 110, 341, 32))
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName("buttonBox")
+
         self.ckbxFullLen = QtWidgets.QCheckBox(dlogSettings)
         self.ckbxFullLen.setGeometry(QtCore.QRect(30, 30, 301, 20))
         self.ckbxFullLen.setObjectName("ckbxFullLen")
+
         self.ckbxBlendVowels = QtWidgets.QCheckBox(dlogSettings)
         self.ckbxBlendVowels.setGeometry(QtCore.QRect(30, 60, 281, 20))
         self.ckbxBlendVowels.setObjectName("ckbxBlendVowels")
+
         self.btnSaveSettings = QtWidgets.QPushButton(dlogSettings)
         self.btnSaveSettings.setGeometry(QtCore.QRect(30, 110, 93, 28))
         self.btnSaveSettings.setObjectName("btnSaveSettings")
         self.btnSaveSettings.clicked.connect(self.saveSettings)
 
         self.retranslateUi(dlogSettings)
+
         self.buttonBox.accepted.connect(dlogSettings.accept)
         self.buttonBox.rejected.connect(dlogSettings.reject)
+
         QtCore.QMetaObject.connectSlotsByName(dlogSettings)
 
     def retranslateUi(self, dlogSettings):
@@ -78,20 +88,26 @@ class mainWindow(object):
         self.myParser = parser()
         self.myDictionary = list()
         self.originalParse = list()
+
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(870, 687)
+
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
+
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
         self.tabWidget.setGeometry(QtCore.QRect(0, 0, 871, 601))
         self.tabWidget.setObjectName("tabWidget")
+
         self.tabMain = QtWidgets.QWidget()
         self.tabMain.setObjectName("tabMain")
+
         self.tblParserOutput = QtWidgets.QTableWidget(self.tabMain)
         self.tblParserOutput.setGeometry(QtCore.QRect(30, 30, 790, 491))
         self.tblParserOutput.setObjectName("tblParserOutput")
         self.tblParserOutput.setColumnCount(4)
         self.tblParserOutput.setRowCount(0)
+
         item = QtWidgets.QTableWidgetItem()
         self.tblParserOutput.setHorizontalHeaderItem(0, item)
         item = QtWidgets.QTableWidgetItem()
@@ -99,130 +115,177 @@ class mainWindow(object):
         item = QtWidgets.QTableWidgetItem()
         self.tblParserOutput.setHorizontalHeaderItem(2, item)
         item = QtWidgets.QTableWidgetItem()
+
         self.tblParserOutput.setHorizontalHeaderItem(3, item)
         self.tblParserOutput.horizontalHeader().setDefaultSectionSize(197)
         self.tblParserOutput.horizontalHeader().setSectionResizeMode(QHeaderView.Fixed)
+
         self.btnParse = QtWidgets.QPushButton(self.tabMain)
-        self.btnParse.setGeometry(QtCore.QRect(470, 532, 93, 28))
+        self.btnParse.setGeometry(QtCore.QRect(480, 532, 93, 28))
         self.btnParse.setObjectName("btnParse")
         self.btnParse.clicked.connect(self.handleParseButton)
+
+        self.cmbLanguage = QtWidgets.QComboBox(self.tabMain)
+        self.cmbLanguage.setGeometry(QtCore.QRect(90, 535, 171, 22))
+        self.cmbLanguage.setObjectName("cmbLanguage")
+        self.cmbLanguage.addItem("")
+        self.cmbLanguage.currentIndexChanged.connect(self.parseUST)
         self.cmbLanguageSetting = QtWidgets.QComboBox(self.tabMain)
-        self.cmbLanguageSetting.setGeometry(QtCore.QRect(240, 535, 171, 22))
+        self.cmbLanguageSetting.setGeometry(QtCore.QRect(280, 535, 171, 22))
         self.cmbLanguageSetting.setObjectName("cmbLanguageSetting")
         self.cmbLanguageSetting.addItem("")
+
         self.tabWidget.addTab(self.tabMain, "")
+
         self.tabError = QtWidgets.QWidget()
         self.tabError.setObjectName("tabError")
+
         self.btnUpdateDictionary = QtWidgets.QPushButton(self.tabError)
         self.btnUpdateDictionary.setGeometry(QtCore.QRect(200, 510, 111, 28))
         self.btnUpdateDictionary.setObjectName("btnUpdateDictionary")
         self.btnUpdateDictionary.clicked.connect(self.addWordsToDictionary)
+
         self.tblErrors = QtWidgets.QTableWidget(self.tabError)
         self.tblErrors.setGeometry(QtCore.QRect(40, 40, 771, 431))
+
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.tblErrors.sizePolicy().hasHeightForWidth())
+
         self.tblErrors.setSizePolicy(sizePolicy)
         self.tblErrors.setStatusTip("")
         self.tblErrors.setDragDropOverwriteMode(True)
         self.tblErrors.setObjectName("tblErrors")
         self.tblErrors.setColumnCount(3)
         self.tblErrors.setRowCount(0)
+
         item = QtWidgets.QTableWidgetItem()
         self.tblErrors.setHorizontalHeaderItem(0, item)
         item = QtWidgets.QTableWidgetItem()
         self.tblErrors.setHorizontalHeaderItem(1, item)
         item = QtWidgets.QTableWidgetItem()
+
         self.tblErrors.setHorizontalHeaderItem(2, item)
         self.tblErrors.horizontalHeader().setDefaultSectionSize(220)
         self.tblErrors.horizontalHeader().setSectionResizeMode(QHeaderView.Fixed)
+
         self.btnUpdateDictionaryAndParse = QtWidgets.QPushButton(self.tabError)
         self.btnUpdateDictionaryAndParse.setGeometry(QtCore.QRect(500, 510, 191, 28))
         self.btnUpdateDictionaryAndParse.setObjectName("btnUpdateDictionaryAndParse")
         self.btnUpdateDictionaryAndParse.clicked.connect(self.addWordsToDictionaryAndUpdate)
+
         self.tabWidget.addTab(self.tabError, "")
+
         self.tabDictionary = QtWidgets.QWidget()
         self.tabDictionary.setObjectName("tabDictionary")
+
         self.btnDictionarySearch = QtWidgets.QPushButton(self.tabDictionary)
         self.btnDictionarySearch.setGeometry(QtCore.QRect(470, 500, 93, 28))
         self.btnDictionarySearch.setObjectName("btnDictionarySearch")
         self.btnDictionarySearch.clicked.connect(self.checkWord)
+
         self.tblDictionary = QtWidgets.QTableWidget(self.tabDictionary)
         self.tblDictionary.setGeometry(QtCore.QRect(40, 20, 771, 431))
+
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.tblDictionary.sizePolicy().hasHeightForWidth())
+
         self.tblDictionary.setSizePolicy(sizePolicy)
         self.tblDictionary.setStatusTip("")
         self.tblDictionary.setDragDropOverwriteMode(True)
         self.tblDictionary.setObjectName("tblDictionary")
         self.tblDictionary.setColumnCount(3)
         self.tblDictionary.setRowCount(0)
+
         item = QtWidgets.QTableWidgetItem()
         self.tblDictionary.setHorizontalHeaderItem(0, item)
         item = QtWidgets.QTableWidgetItem()
         self.tblDictionary.setHorizontalHeaderItem(1, item)
         item = QtWidgets.QTableWidgetItem()
+
         self.tblDictionary.setHorizontalHeaderItem(2, item)
         self.tblDictionary.horizontalHeader().setDefaultSectionSize(257)
         self.tblDictionary.horizontalHeader().setSectionResizeMode(QHeaderView.Fixed)
+
         self.btnDictionaryAdd = QtWidgets.QPushButton(self.tabDictionary)
         self.btnDictionaryAdd.setGeometry(QtCore.QRect(720, 500, 93, 28))
         self.btnDictionaryAdd.setObjectName("btnDictionaryAdd")
         self.btnDictionaryAdd.clicked.connect(self.openDicitonaryDialog)
+
         self.ltxtDictionaryInput = QtWidgets.QLineEdit(self.tabDictionary)
         self.ltxtDictionaryInput.setGeometry(QtCore.QRect(80, 500, 341, 22))
         self.ltxtDictionaryInput.setText("")
         self.ltxtDictionaryInput.setObjectName("ltxtDictionaryInput")
         self.ltxtDictionaryInput.returnPressed.connect(self.checkWord)
+
         self.btnDictionaryUpdate = QtWidgets.QPushButton(self.tabDictionary)
         self.btnDictionaryUpdate.setGeometry(QtCore.QRect(595, 500, 93, 28))
         self.btnDictionaryUpdate.setObjectName("btnDictionaryUpdate")
         self.btnDictionaryUpdate.clicked.connect(self.updateDictionary)
+
         self.tabWidget.addTab(self.tabDictionary, "")
+
         self.btnConfirm = QtWidgets.QPushButton(self.centralwidget)
         self.btnConfirm.setGeometry(QtCore.QRect(200, 605, 93, 28))
         self.btnConfirm.setObjectName("btnConfirm")
         self.btnConfirm.clicked.connect(self.closeUST)
+
         self.btnCancel = QtWidgets.QPushButton(self.centralwidget)
         self.btnCancel.setGeometry(QtCore.QRect(580, 605, 93, 28))
         self.btnCancel.setObjectName("btnCancel")
         self.btnCancel.clicked.connect(self.closeWindow)
+
         MainWindow.setCentralWidget(self.centralwidget)
+
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 870, 26))
         self.menubar.setObjectName("menubar")
+
         self.menuFile = QtWidgets.QMenu(self.menubar)
         self.menuFile.setObjectName("menuFile")
+
         self.menuHelp = QtWidgets.QMenu(self.menubar)
         self.menuHelp.setObjectName("menuHelp")
+
         MainWindow.setMenuBar(self.menubar)
+
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
+
         MainWindow.setStatusBar(self.statusbar)
+
         self.actionSettings = QtWidgets.QAction(MainWindow)
         self.actionSettings.setObjectName("actionSettings")
+
         self.mnuSaveDictionary = QtWidgets.QAction(MainWindow)
         self.mnuSaveDictionary.setObjectName("mnuSaveDictionary")
         self.mnuSaveDictionary.triggered.connect(self.saveDictionary)
+
         self.mnuSettings = QtWidgets.QAction(MainWindow)
         self.mnuSettings.setObjectName("mnuSettings")
         self.mnuSettings.triggered.connect(self.openSettingsDialog)
+
         self.menuFile.addAction(self.actionSettings)
         self.menuFile.addAction(self.mnuSettings)
         self.menuFile.addAction(self.mnuSaveDictionary)
+
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuHelp.menuAction())
 
         self.retranslateUi(MainWindow)
+
         self.tabWidget.setCurrentIndex(0)
+
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
+
         MainWindow.setWindowTitle(_translate("MainWindow", "LyricParser"))
+
         item = self.tblParserOutput.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "NoteNum"))
         item = self.tblParserOutput.horizontalHeaderItem(1)
@@ -231,42 +294,48 @@ class mainWindow(object):
         item.setText(_translate("MainWindow", "Word Found"))
         item = self.tblParserOutput.horizontalHeaderItem(3)
         item.setText(_translate("MainWindow", "Syllable"))
+
         self.btnParse.setText(_translate("MainWindow", "Parse UST"))
-        self.cmbLanguageSetting.setItemText(0, _translate("MainWindow", "English VCCV"))
+
+        self.cmbLanguage.setItemText(0, _translate("MainWindow", "(Select Language)"))
+        self.cmbLanguageSetting.setItemText(0, _translate("MainWindow", "VCCV"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabMain), _translate("MainWindow", "Parser"))
         self.btnUpdateDictionary.setText(_translate("MainWindow", "Update Dictionary"))
+
         item = self.tblErrors.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Word"))
         item = self.tblErrors.horizontalHeaderItem(1)
         item.setText(_translate("MainWindow", "Length"))
         item = self.tblErrors.horizontalHeaderItem(2)
         item.setText(_translate("MainWindow", "Syllables"))
+
         self.btnUpdateDictionaryAndParse.setText(_translate("MainWindow", "Update Dictionary and Parse"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabError), _translate("MainWindow", "Errors"))
         self.btnDictionarySearch.setText(_translate("MainWindow", "Search"))
+
         item = self.tblDictionary.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Word"))
         item = self.tblDictionary.horizontalHeaderItem(1)
         item.setText(_translate("MainWindow", "Syllables"))
         item = self.tblDictionary.horizontalHeaderItem(2)
         item.setText(_translate("MainWindow", "Length"))
+
         self.btnDictionaryAdd.setText(_translate("MainWindow", "Add Word(s)"))
         self.btnDictionaryUpdate.setText(_translate("MainWindow", "Update"))
+
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabDictionary), _translate("MainWindow", "Dictionary"))
+
         self.btnConfirm.setText(_translate("MainWindow", "Confirm"))
         self.btnCancel.setText(_translate("MainWindow", "Cancel"))
+
         self.menuFile.setTitle(_translate("MainWindow", "File"))
         self.menuHelp.setTitle(_translate("MainWindow", "Help"))
         self.actionSettings.setText(_translate("MainWindow", "Close"))
         self.mnuSaveDictionary.setText(_translate("MainWindow", "Save Dictionary"))
         self.mnuSettings.setText(_translate("MainWindow", "Settings"))
 
-    # loads the dictionary file into the parser
-    def loadDictionary(self):
-        with open("dictionary.txt") as myFile:
-            for line in myFile:
-                self.myParser.addWordToTrie(line)
-        myFile.close()
+    # def checkCombo(self):
+    #     print("Index: " + str(self.cmbLanguage.currentIndex()) + " got : " + str(self.myParser.trieList[self.cmbLanguage.currentIndex()]))
 
     # used by search button on the dictionary page. Checks if the word given is in the dictionary, and puts any syllables
     # in the grid. If the word ends with "-" looks up any words that start with the substring.
@@ -278,12 +347,14 @@ class mainWindow(object):
         if len(inWord) > 0 and len(inWord) < 100 and inWord[-1] == "-" and inWord != "-":
             inWord = inWord[:-1]
             inserts = self.myParser.myTrie.getSubTrie(inWord)
+
             # loop through each word and insert them into the grid
             if inserts is not None and len(inserts) > 2:
                 self.tblDictionary.setRowCount(len(inserts) / 3)
                 count = 0
                 groupCount = 0
                 tempDictionaryItem = list()
+
                 for insert in inserts:
                     item = QtWidgets.QTableWidgetItem()
                     item.setText(insert)
@@ -297,26 +368,32 @@ class mainWindow(object):
                         tempDictionaryItem = list()
                         groupCount = 0
                         count += 1
+
             else:
                 self.tblDictionary.setRowCount(0)
+
         # if the word exists put it in the dictionary table
         elif len(inWord) < 100 and self.myParser.myTrie.getWord(inWord) != "":
             pronunciations = self.myParser.myTrie.getWord(inWord)
             inserts = list()
+
             for i in pronunciations:
                 inserts.append(inWord)
                 inserts.append(i)
                 inserts.append(str(len(i.split(":"))))
+
             if len(inserts) > 2:
                 self.tblDictionary.setRowCount(len(inserts) / 3)
                 count = 0
                 groupCount = 0
                 tempDictionaryItem = list()
+
                 for insert in inserts:
                     item = QtWidgets.QTableWidgetItem()
                     item.setText(insert)
                     self.tblDictionary.setItem(count, groupCount, item)
                     tempDictionaryItem.append(insert)
+
                     groupCount += 1
                     if groupCount > 2:
                         self.myDictionary.append(dictionaryItem(tempDictionaryItem[0], tempDictionaryItem[1], tempDictionaryItem[2]))
@@ -329,28 +406,40 @@ class mainWindow(object):
     # used on init. Converts lyrics to the psuedo VCCV syntax and puts them in the UST. Any errors are triggered here.
     def parseUST(self):
         # go through each note and try to find the lyric in the dictionary
-        self.myParser.run()
+        self.myParser.selectedTrie = self.myParser.trieList[self.cmbLanguage.currentIndex() - 1] if self.cmbLanguage.currentIndex() > 0 else ""
 
-        # any missing words are stored in parser.missingWords. Add all missing words to the Error tab and mark the number of errors
-        if len(self.myParser.missingWords) > 0:
-            self.tblErrors.setRowCount(len(self.myParser.missingWords))
-            self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabError), "Errors (" + str(len(self.myParser.missingWords)) + ")")
-            count = 0
-            for missing in self.myParser.missingWords:
-                missingList = missing.listData()
-                for i in range (0, 3):
-                    item = QtWidgets.QTableWidgetItem()
-                    item.setText(missingList[i])
-                    self.tblErrors.setItem(count, i, item)
-                count += 1
+        if self.cmbLanguage.currentIndex() > 0:
+        # print()
+            self.myParser.missingWords.clear()
+            self.myParser.run()
 
-        self.updateParserTable()
+            # any missing words are stored in parser.missingWords. Add all missing words to the Error tab and mark the number of errors
+            if len(self.myParser.missingWords) > 0:
+
+                self.tblErrors.setRowCount(len(self.myParser.missingWords))
+                self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabError), "Errors (" + str(len(self.myParser.missingWords)) + ")")
+                count = 0
+                for missing in self.myParser.missingWords:
+                    missingList = missing.listData()
+                    for i in range (0, 3):
+                        item = QtWidgets.QTableWidgetItem()
+                        item.setText(missingList[i])
+                        self.tblErrors.setItem(count, i, item)
+                    count += 1
+
+            self.updateParserTable()
+
+        # store the current parsing of the ust to check for updates
+        self.originalParse.clear()
+        for i in range(0, self.tblParserOutput.rowCount()):
+            self.originalParse.append(self.tblParserOutput.item(i, 2).text())
 
     # updates the parser grid based on the current state of the UST
     def updateParserTable(self):
         self.tblParserOutput.setRowCount(len(self.myParser.myUst.notes))
         count = 0
         groupCount = 0
+
         # loop through each note in the UST
         for note in self.myParser.myUst.notes:
             inserts = [str(count), note.lyric, note.parentLyric]
@@ -377,13 +466,16 @@ class mainWindow(object):
     # used by the updateDictionary button on the Errors page. Adds whatever fixes the user made into the dictionary if they're valid
     def addWordsToDictionary(self):
         rowCount = self.tblErrors.rowCount()
+        delCount = 0
+
         # for each row check if the user tried to fix the word If they did and the word fits, put it in the dictionary
         for i in range(0, rowCount):
-            inSyll = self.tblErrors.item(i, 2).text()
+            inSyll = self.tblErrors.item(i - delCount, 2).text()
             if len(inSyll) > 0 and len(inSyll.split(":")) == self.myParser.missingWords[i].numSylls:
                 self.myParser.missingWords[i].fixedSylls = inSyll
                 self.myParser.myTrie.insertWord(self.myParser.missingWords[i].lyric, [inSyll])
-                self.tblErrors.removeRow(i)
+                self.tblErrors.removeRow(i - delCount)
+                delCount += 1
 
         # update the Errors tab with the current number of errors
         if self.tblErrors.rowCount() > 0:
@@ -409,6 +501,7 @@ class mainWindow(object):
                 self.myParser.parseFixedVCCV(self.myParser.missingWords[i])
                 self.tblErrors.removeRow(i - delCount)
                 delCount += 1
+
             # if no fix was made, then see if the word was added either through the dictionary or an earlier note in the
             # function. If so update the note based on what's in the dictionary.
             elif len(inSyll) == 0:
@@ -456,15 +549,22 @@ class mainWindow(object):
 
         if index == 0:
             # updates the Ust with any changes the user made on the Parser page
-            self.updateUst()
-            # formats the notes into the VCCV format
-            self.formatVCCVNotes()
-            self.myParser.isParsed = True
-
-            # print("\n\nPrinting Notes after Parsing")
-            # for note in self.myParser.myUst.notes:
-            #     for subNote in note.subNotes:
-            #         note.printNote()
+            self.btnParse.setEnabled(False)
+            try:
+                self.updateUst()
+                # formats the notes into the VCCV format
+                if self.myParser.isParsed:
+                    for i in range (1, len(self.myParser.myUst.notes)):
+                        self.myParser.getSizes(self.myParser.myUst.notes[i-1], self.myParser.myUst.notes[i])
+                    # change subnotes to whatever's there and update sizes
+                else:
+                    self.formatVCCVNotes()
+                    self.myParser.isParsed = True
+            except Exception as err:
+                print("oh no: %s" %err)
+                raise err
+            finally:
+                self.btnParse.setEnabled(True)
 
     # updates the UST based on whatever the user changed on the parser tab. Changes to syllables replaces the note's syllables
     # while changing the lyric updates the lyric.
@@ -487,6 +587,7 @@ class mainWindow(object):
                 if inSyllables != tempSyll[:-1]:
                     self.myParser.myUst.notes[i].subNotes.clear()
                     self.myParser.createVCCVNotes(self.myParser.myUst.notes[i], inSyllables)
+
                 # otherwise if the word does not match the original lyric, reparse the note.
                 elif inWord != self.originalParse[i]:
                     index = i
@@ -551,16 +652,24 @@ class mainWindow(object):
     def openDicitonaryDialog(self):
         myDialog = dictionaryDialog()
         myDialog.exec_()
+
+        # if the dialog returned "OK", add any words found to the dictionary
         if myDialog.result() == 1:
             txt = myDialog.plainTextEdit.toPlainText()
             dictionaryList = list()
             currWord = ""
+
+            # loop through each line in the textbox
             for line in txt.split("\n"):
+
+                # add line formatted as "_word: def1|def2|..."
                 if len(line) > 0 and line[0] == "_":
                     line = line + "\n"
                     currWord = line[1:].split(" ")
                     currWord = currWord[0][:-1]
                     self.myParser.addWordToTrie(line)
+
+                # add line formatted as "word def1|def2|... or word: def1|def2|..."
                 elif len(line) > 0:
                     splitLine = line.split(" ")
                     if splitLine[0][-1] == ":":
@@ -568,6 +677,8 @@ class mainWindow(object):
 
                     self.myParser.myTrie.insertWord(splitLine[0], splitLine[1].split("|"))
                     currWord = splitLine[0]
+
+                # add the words added to the dictionary list to add to the dictionary table
                 syllList = line.split(" ")
                 if len(syllList) > 1:
                     syllList = syllList[1].split("|")
@@ -578,18 +689,21 @@ class mainWindow(object):
 
             self.myDictionary.clear()
 
+            # if we added at least one word, update the dictionary table with the words added
             if len(dictionaryList) > 2:
                 self.tblDictionary.setRowCount(len(dictionaryList) / 3)
-
                 count = 0
                 groupCount = 0
                 tempDictionaryList = list()
+
+                # loop through each item in our list and add them to the table
                 for insert in dictionaryList:
                     item = QtWidgets.QTableWidgetItem()
                     item.setText(insert)
                     self.tblDictionary.setItem(count, groupCount, item)
                     tempDictionaryList.append(insert)
                     groupCount += 1
+
                     if groupCount > 2:
                         self.myDictionary.append(dictionaryItem(tempDictionaryList[0], tempDictionaryList[1], tempDictionaryList[2]))
                         tempDictionaryList.clear()
@@ -615,12 +729,16 @@ class mainWindow(object):
     # on finishing the UST, overrite the UST and dictionary files.
     def closeUST(self):
         self.myParser.finishPlugin()
-        self.myParser.myTrie.printTrieToFile("dictionary.txt")
+        for trie in self.myParser.getTrieStruct:
+            print("I got trie: %s" %trie)
+            self.myParser.getTrieStruct[trie].printTrieToFile()
+
+        # self.myParser.myTrie.printTrieToFile()
         window.close()
 
     # saves the current dictionary to the dictionary file
     def saveDictionary(self):
-        self.myParser.myTrie.printTrieToFile("dictionary.txt")
+        self.myParser.myTrie.printTrieToFile()
 
     # on closing the window just save the dictionary
     def closeWindow(self):
@@ -644,10 +762,16 @@ class myApp(QMainWindow):
         super().__init__()
         self.ui =  mainWindow()
         self.ui.setupUi(self)
-        # self.ui.loadDictionary()
         self.ui.parseUST()
-        for i in range(0, self.ui.tblParserOutput.rowCount()):
-            self.ui.originalParse.append(self.ui.tblParserOutput.item(i, 2).text())
+        # for i in range(0, self.ui.tblParserOutput.rowCount()):
+        #     self.ui.originalParse.append(self.ui.tblParserOutput.item(i, 2).text())
+
+        for item in self.ui.myParser.trieList:
+            self.ui.cmbLanguage.addItem(item)
+
+            #if item == self.ui.myParser.selectedTrie:
+                #self.ui.cmbLanguage.setCurrentIndex(self.ui.cmbLanguage.size() - 1)
+
         self.show()
 
 # used to store the data regarding the initial data stored in the dictionary

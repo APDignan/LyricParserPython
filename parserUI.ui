@@ -66,7 +66,7 @@
      <widget class="QPushButton" name="btnParse">
       <property name="geometry">
        <rect>
-        <x>470</x>
+        <x>480</x>
         <y>532</y>
         <width>93</width>
         <height>28</height>
@@ -76,10 +76,10 @@
        <string>Parse UST</string>
       </property>
      </widget>
-     <widget class="QComboBox" name="cmbLanguageSetting">
+     <widget class="QComboBox" name="cmbLanguage">
       <property name="geometry">
        <rect>
-        <x>240</x>
+        <x>90</x>
         <y>535</y>
         <width>171</width>
         <height>22</height>
@@ -103,6 +103,21 @@
       <property name="text">
        <string>Update Table</string>
       </property>
+     </widget>
+     <widget class="QComboBox" name="cmbLanguageSetting">
+      <property name="geometry">
+       <rect>
+        <x>280</x>
+        <y>535</y>
+        <width>171</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <item>
+       <property name="text">
+        <string>VCCV</string>
+       </property>
+      </item>
      </widget>
     </widget>
     <widget class="QWidget" name="tabError">

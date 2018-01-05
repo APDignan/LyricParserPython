@@ -137,15 +137,15 @@ class Ust:
         setting = ""
         try:
             outFile = open(fileName, 'w')
-            #checkPitches = open("pitches.txt", "w")
+            checkPitches = open("pitches.txt", "w")
 
             # write the version and setting information using the settingsKey list for order
             outFile.write('[#VERSION]\n' + self.__settings['[#VERSION]'] + '\n' + '[#SETTING]\n')
-            #checkPitches.write('[#VERSION]\n' + self.__settings['[#VERSION]'] + '\n' + '[#SETTING]\n')
+            checkPitches.write('[#VERSION]\n' + self.__settings['[#VERSION]'] + '\n' + '[#SETTING]\n')
             errState = 1
             for setting in self.__settingsKeys:
                 outFile.write(setting + '=' + self.__settings[setting] + '\n')
-                #checkPitches.write(setting + '=' + self.__settings[setting] + '\n')
+                checkPitches.write(setting + '=' + self.__settings[setting] + '\n')
 
             # get the index to label the notes as well as the list of parameters that had split data
             currentIndex = self.__startValue
@@ -158,20 +158,20 @@ class Ust:
                 for subNote in currNote.subNotes:
                     if currNote.state == "prev" and self.__hasPrev:
                         outFile.write('[#PREV]\n')
-                        #checkPitches.write('[#PREV]\n')
+                        checkPitches.write('[#PREV]\n')
                     elif currNote.state == "next" and self.__hasNext:
                         outFile.write('[#NEXT]\n')
-                        #checkPitches.write('[#NEXT]\n')
+                        checkPitches.write('[#NEXT]\n')
                     else:
                         outFile.write(convertNoteNumber(currentIndex) + '\n')
-                        #checkPitches.write(convertNoteNumber(currentIndex) + '\n')
+                        checkPitches.write(convertNoteNumber(currentIndex) + '\n')
                         currentIndex += 1
 
                     # for each parameter in the note, write the parameter. Any paramter in splitProperties has its properties
                     # reformatted for the ust
                     for property in subNote.getPropertiesKeys():
                         outFile.write(property + '=')
-                        #checkPitches.write(property + '=')
+                        checkPitches.write(property + '=')
                         # if property in splitProperties:
                         #     currProperty = ""
                         #     for val in subNote.getProperty(property):
@@ -180,10 +180,10 @@ class Ust:
                         #     checkPitches.write("For lyric %s and property %s I got %s\n" %(subNote.lyric, property, subNote.getProperty(property)))
                         # else:
                         outFile.write(subNote.getProperty(property) + '\n')
-                        #checkPitches.write(subNote.getProperty(property) + '\n')
+                        checkPitches.write(subNote.getProperty(property) + '\n')
                     noteCount += 1
 
-            #checkPitches.close()
+            checkPitches.close()
 
         except Exception as err:
             if errState == 0:
@@ -227,7 +227,7 @@ class Ust:
         if (index == 0 and self.__notes[0].state != "prev") or (index == len(self.__notes) - 1 and self.__notes[-1].state != "next") or (index > 0 and index < len(self.__notes)):
             self.__notes.remove(self.__notes[index])
 
-    # get the note at the index inIndex within the ust; includes prev if unless specififed
+    # get the note at the index inIndex within the ust; includes prev if unless specified
     def getNoteIndex(self, inIndex, usePrev = False):
         return (inIndex + self.__startValue + 1) if (self.__hasPrev and usePrev == True) else inIndex + self.__startValue
 
@@ -292,7 +292,7 @@ class Ust:
 class note:
     # by default just creates an empty note, but passing default = True will create a note with predetermined values.
     # One can define some of these values using the proper parameters.
-    def __init__(self, default = False, length = "480", lyric = 'あ', pitch = "60"):
+    def __init__(self, default = False, length = "480", lyric = 'a', pitch = "60"):
         self.__properties = dict()
         self.__propertiesKeys = list()
         self.__syllables = list()
@@ -302,11 +302,14 @@ class note:
         # used to define a note as prev/next, but besides that can be used for anything else.
         self.__state = "note"
         self.__parentLyric = ""
+        self.__startConst = ""
+        self.__vowel = ""
+        self.__endConst = ""
 
         # sets default properties
         if default == True:
             genericProperties = {'Length': length, 'Lyric': lyric, 'NoteNum': pitch, 'Intensity': "100",
-                                 'Modulation': "0", "PBS" : "0", "PBW" : "0", "PBY": "0"}
+                                 'Modulation': "0", "PBS" : "0", "PBW" : "0", "PBY": "0", "VBR": "0"}
 
             for property in genericProperties:
                 self.setProperty(property, genericProperties[property])
@@ -323,8 +326,8 @@ class note:
     # passing the override parameter will allow the program to edit it.
     def setProperty(self, inProperty, val, override = None):
 
-        # parameters that I've found stores a list of values. May be subjet to change
-        splitOnComma = ['PBW', 'PBY', 'Envelope', '@alias']
+        # # parameters that I've found stores a list of values. May be subjet to change
+        # splitOnComma = ['PBW', 'PBY', 'PBS', 'VBR', 'Envelope', '@alias']
 
         # only edits the note if an override value was passed or if the note was not flagged
         if override is not None or self.canEdit:
@@ -450,71 +453,55 @@ class note:
     def parentLyric(self, inLyric):
         self.__parentLyric = inLyric
 
+    @property
+    def startConst(self):
+        return self.__startConst
+    @startConst.setter
+    def startConst(self, inStartConst):
+        self.__startConst = inStartConst
+
+    @property
+    def vowel(self):
+        return self.__vowel
+    @vowel.setter
+    def vowel(self, inVowel):
+        self.__vowel = inVowel
+
+    @property
+    def endConst(self):
+        return self.__endConst
+    @endConst.setter
+    def endConst(self, inEndConst):
+        self.__endConst = inEndConst
+
     # gets the last vowel for a subNote.
     @property
     def lastVowel(self):
-        vowels = ['a', 'e', 'i', 'o', 'u', 'E', '9', '3', '@', 'A', 'I', 'O', '8', 'Q', '6', 'x', '9l', '0l', '8n', '&',
-                  '0r', '1ng', 'Ang']
-
-        myVowel = self.lyric[-1:] if self.lyric[-1:] in vowels else ""
-        myVowel = self.lyric[-2:] if len(self.lyric) > 1 and self.lyric[-2:] in vowels else myVowel
-        myVowel = self.lyric[-3:] if len(self.lyric) > 2 and self.lyric[-3:] in vowels else myVowel
-
-        return myVowel
-
-    # gets the consonants at the beginning of a note.
-    @property
-    def CCBeginning(self, vowel=None):
-        vowels = vowels = ['a', 'e', 'i', 'o', 'u', 'E', '9', '3', '@', 'A', 'I', 'O', '8', 'Q', '6', 'x', '&', '0', '1']
-
-        index = 0
-        while index < len(self.lyric) and self.lyric[index] not in vowels:
-            index += 1
-
-        return self.lyric[:index]
+        return self.vowel if self.endConst == "" else ""
 
     # gets the vowel at the beginning of a note
     @property
     def VBeginning(self):
-        vowels = vowels = ['a', 'e', 'i', 'o', 'u', 'E', '9', '3', '@', 'A', 'I', 'O', '8', 'Q', '6', 'x', '&', '0',
-                           '1']
 
-        return self.lyric[0] if self.lyric[0] in vowels else ""
+        return self.vowel if self.startConst == "" else ""
 
-    # gets the consonants at the end of a syllable
-    @property
-    def lastConst(self):
-        vowels = ['a', 'e', 'i', 'o', 'u', 'E', '9', '3', '@', 'A', 'I', 'O', '8', 'Q', '6', 'x', '&', '0', '1']
-
-        index = len(self.lyric)
-
-        # lyric: iz
-        # index = 2
-
-        # index = 2, z
-        # index = 1, i
-        while index > 0 and self.lyric[index - 1:index] not in vowels:
-            index -= 1
-
-        return self.lyric[index:]
-
-    # split a lyric on it's vowel and returns the split lyric
-    @property
-    def splitLyric(self):
-        oneCharVowels = ['a', 'e', 'i', 'o', 'u', 'E', '9', '3', '@', 'A', 'I', 'O', '8', 'Q', '6', 'x', '&']
-        twoCharVowels = ['9l', '0l', '8n', '0r']
-        threeCharVowels = ['1ng', 'Ang']
-
-        myList = list()
-
-        if self.lyric[0:1] in oneCharVowels:
-            myList = [self.lyric[0:1], self.lyric[1:]]
-        elif len(self.lyric) > 1 and self.lyric[0:2] in twoCharVowels:
-            myList = [self.lyric[0:2], self.lyric[2:]]
-        elif len(self.lyric) > 2 and self.lyric[0:3] in threeCharVowels:
-            myList = [self.lyric[0:3], self.lyric[3:]]
-
-        return myList
+    # # split a lyric on it's vowel and returns the split lyric
+    # @property
+    # def splitLyric(self):
+    #     oneCharVowels = ['a', 'e', 'i', 'o', 'u', 'E', '9', '3', '@', 'A', 'I', 'O', '8', 'Q', '6', 'x', '&']
+    #     twoCharVowels = ['9l', '0l', '8n', '0r']
+    #     threeCharVowels = ['1ng', 'Ang']
+    #
+    #     myList = list()
+    #
+    #     if self.lyric[0:1] in oneCharVowels:
+    #         myList = [self.lyric[0:1], self.lyric[1:]]
+    #     elif len(self.lyric) > 1 and self.lyric[0:2] in twoCharVowels:
+    #         myList = [self.lyric[0:2], self.lyric[2:]]
+    #     elif len(self.lyric) > 2 and self.lyric[0:3] in threeCharVowels:
+    #         myList = [self.lyric[0:3], self.lyric[3:]]
+    #
+    #     return myList
 
     # returns the propertiesKeys for iteration
     def getPropertiesKeys(self):
@@ -552,6 +539,23 @@ def copyNote(inNote, lyric=None, location=""):
 
     if lyric is not None:
         newNote.lyric = lyric
+
+
+    if "PBS" not in inNote.getPropertiesKeys():
+        newNote.setPropertyLazy("PBS", "0")
+
+    if "PBY" not in inNote.getPropertiesKeys():
+        newNote.setPropertyLazy("PBY", "0")
+
+    if "PBW" not in inNote.getPropertiesKeys():
+        newNote.setPropertyLazy("PBW", "0")
+
+    if "VBR" not in inNote.getPropertiesKeys():
+        newNote.setPropertyLazy("VBR", "0")
+
+    # newNote.setProperty("PBS", "0")
+    # newNote.setProperty("PBY", "0")
+    # newNote.setProperty("PBW", "0")
 
     return newNote
 

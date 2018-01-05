@@ -159,25 +159,5 @@ class OtoLine:
     def printTest(self):
         print(self.sourceWav + '=' + self.alias + "," + self.offset + "," + self.cutoff + "," + self.consonant + "," + self.preutterance + "," + self.overlap)
 
-# myPath = "C:\\Users\\Andrew\\Desktop\\Ryo CORE V3"
-#
-# otoLine = OtoLine("_ああいあうえあ.wav=- あF#3,670.0,450,-600,300,100")
-# otoLine.printTest()
-# print(listdir(myPath))
-# dirs = [d for d in listdir(myPath) if not isfile(join(myPath, d))]
-# print(dirs)
-# otoDirs = []
-# for d in dirs:
-#     if isfile(join(join(myPath, d), "oto.ini")):
-#         otoDirs.append(join(join(myPath, d), "oto.ini"))
-#
-# print(otoDirs)
 
-#testOto = Oto("C:\\Users\\Andrew\\UTAU\\voice\\Snowy MIDDAY")
-
-
-#testOto.printOto()
-
-
-#(P* )N(S*)
 

@@ -4,16 +4,42 @@ from ParserException import ParserException
 class trie:
 
     # init
-    def __init__(self):
+    def __init__(self, inFileName, inFilePath):
         self.dictionary = trieNode()
+        self.__printOrder = list()
+        self.__fileName = inFileName
+        self.__filePath = inFilePath
+
+    @property
+    def printOrder(self):
+        return self.__printOrder
+    @printOrder.setter
+    def printOrder(self, inOrder):
+        self.__printOrder = inOrder.split(",")
+
+    @property
+    def fileName(self):
+        return self.__fileName
+    @fileName.setter
+    def fileName(self, inFileName):
+        self.__fileName = inFileName
+
+    @property
+    def filePath(self):
+        return self.__filePath
+    @filePath.setter
+    def filePath(self, inPath):
+        self.__filePath = inPath
 
     # insert a word into the trie with its syllables
     def insertWord(self, inWord, syllables):
+
         if len(inWord) <= 0:
             return
 
         currNode = self.dictionary
-        # starting at the head, traverse the trie, adding nodes whereever needed. Once we reach the last character, add syll.
+
+        # starting at the head, traverse the trie, adding nodes where they're needed. Once we reach the last character, add syll.
         while len(inWord) > 0:
             currNode = currNode.addBranch(inWord, syllables)
             inWord = inWord[1:]
@@ -32,6 +58,7 @@ class trie:
             return None
 
         currNode = self.dictionary
+
         # loops through each character of inWord. If we reach a branch that doesn't exist, return None.
         while len(inWord) > 0:
             if currNode.hasBranch(inWord[0]):
@@ -56,58 +83,84 @@ class trie:
                 node.syllables.remove(oldPronunciation)
 
     def getSubTrie(self, inSubWord):
-        alphabet = '\'abcdefghijklmnopqrstuvwxyz'
         node = self.__getWordHelper(inSubWord, ignore=True)
         if node is not None:
             subTrieData = list()
-            self.getSubTrieHelper(inSubWord, alphabet, node, subTrieData)
+            self.getSubTrieHelper(inSubWord, self.printOrder, node, subTrieData)
             return subTrieData
 
-
-    def getSubTrieHelper(self, word, alphabet, node, subTrieData):
+    def getSubTrieHelper(self, word, printOrder, node, subTrieData):
         if node.syllables:
             for syll in node.syllables:
                 subTrieData.append(word)
                 subTrieData.append(str(syll))
                 subTrieData.append(str(len(syll.split(":"))))
-        for l in alphabet:
+
+        counter = 0
+        for l in printOrder:
             if node.hasBranch(l):
-                self.getSubTrieHelper(word + l, alphabet, node.dictionary[l], subTrieData)
+                self.getSubTrieHelper(word + l, printOrder, node.dictionary[l], subTrieData)
+                counter += 1
+
+        if counter < len(node.dictionary):
+            for branch in node.dictionary:
+                if branch not in printOrder:
+                    self.getSubTrieHelper(word + branch, printOrder, node.dictionary[branch], subTrieData)
 
     # debugging: prints the trie to the screen.
     def printTrie(self):
         # list of applicable paths.
-        alphabet = '\'abcdefghijklmnopqrstuvwxyz'
         word = ''
-        self.printTrieHelper(word, alphabet, self.dictionary)
+        self.printTrieHelper(word, self.printOrder, self.dictionary)
 
     # goes through each branch in order and prints the word and syllable to the screen
-    def printTrieHelper(self, word, alphabet, node):
+    def printTrieHelper(self, word, printOrder, node):
         if node.syllables:
             print(word + ':' + str(node.syllables))
-        for l in alphabet:
+        counter = 0
+        for l in printOrder:
             if node.hasBranch(l):
-                self.printTrieHelper(word + l, alphabet, node.dictionary[l])
+                self.printTrieHelper(word + l, printOrder, node.dictionary[l])
+                counter += 1
+
+        if counter < len(node.dictionary):
+            for branch in node.dictionary:
+                if branch not in printOrder:
+                    self.printTrieHelper(word + branch, printOrder, node.dictionary[branch])
 
     # same thing as printTrie but writes the trie to a file
-    def printTrieToFile(self, fileName):
-        fout = open(fileName, "w")
-        alphabet = '\'abcdefghijklmnopqrstuvwxyz'
+    def printTrieToFile(self):
+        fout = open(self.filePath, "w")
         word = ''
         try:
-            self.printTrieToFileHelper(word, alphabet, self.dictionary, fout)
+            if len(self.printOrder) > 0:
+                tempStr = ""
+                for letter in self.printOrder:
+                    tempStr = tempStr + letter + ","
+                fout.write("order=%s\n" %tempStr[:-1])
+            else:
+                fout.write("order=\n")
+            self.printTrieToFileHelper(word, self.printOrder, self.dictionary, fout)
         except Exception as err:
             raise ParserException("ERROR: (Writing Dicitonary) Could not write word %s to dictionary." %word)
         finally:
             fout.close()
 
     # same thing as printTrieHelper except it writes to a file
-    def printTrieToFileHelper(self, word, alphabet, node, file):
+    def printTrieToFileHelper(self, word, printOrder, node, file):
         if node.syllables:
             self.writeSyllablesToFile(word, node, file)
-        for l in alphabet:
+
+        counter = 0
+        for l in printOrder:
             if node.hasBranch(l):
-                self.printTrieToFileHelper(word + l, alphabet, node.dictionary[l], file)
+                self.printTrieToFileHelper(word + l, printOrder, node.dictionary[l], file)
+                counter += 1
+
+        if counter < len(node.dictionary):
+            for branch in node.dictionary:
+                if branch not in printOrder:
+                    self.printTrieToFileHelper(word + branch, printOrder, node.dictionary[branch], file)
 
     # formats the syllables to a readable format
     def writeSyllablesToFile(self, word, node, file):
@@ -120,7 +173,6 @@ class trie:
                 index+= 1
 
             file.write("_" + word + ": " + syllables + '\n')
-
 
     # sets a word within syllables to be marked as the one to be used
     def setWordPreference(self, inWord, syllables):
@@ -146,7 +198,7 @@ class trieNode:
                 self.dictionary[inChar[0]] = trieNode(syll)
             else:
                 for testSyll in syll:
-                    print("Testing %s when I have syllables %s" %(testSyll, self.dictionary[inChar[0]].syllables))
+                    # print("Testing %s when I have syllables %s" %(testSyll, self.dictionary[inChar[0]].syllables))
                     if testSyll not in self.dictionary[inChar[0]].syllables:
                         self.dictionary[inChar[0]].setSyllables(testSyll)
         else:
@@ -184,20 +236,7 @@ class trieNode:
 
             index += 1
 
-# testTrie = trie()
-# testTrie.insertWord("hello", "he:lO")
-# testTrie.insertWord("world", 'w3,3ld')
-# testTrie.insertWord("in", "i,in")
-# testTrie.insertWord("insert", 'i,in:s3,3t')
-#
-# print("My trie: ")
-# testTrie.printTrie()
-#
-# print("hello gets " + str(testTrie.getWord("hello")))
-# #print(testTrie.getWord("in"))
-# print("insert gets " + str(testTrie.getWord("insert")))
-# print("Hello gets " + str(testTrie.getWord("Hello")))
-# print("Balloon gets " + str(testTrie.getWord("Balloon")))
+
 
 
 
