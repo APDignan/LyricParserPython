@@ -433,14 +433,15 @@ class parser():
                     self.myUst.notes[index].subNotes = [self.myUst.notes[index]]
 
                 index+= 1
+
             # Only format the notes if we've already parsed the ust
-            if self.isParsed:
-                index = inMissingNote.startNote + 1
-                self.fixPrevNote(prevNote, currNote)
-                while index < inMissingNote.startNote + inMissingNote.range:
-                    self.formatNotes(self.myUst.notes[index - 1], self.myUst.notes[index])
-                    index += 1
-                self.fixNextNote(endNote, nextNote)
+            # if self.isParsed:
+            index = inMissingNote.startNote + 1
+            self.fixPrevNote(prevNote, currNote)
+            while index < inMissingNote.startNote + inMissingNote.range:
+                self.formatNotes(self.myUst.notes[index - 1], self.myUst.notes[index])
+                index += 1
+            self.fixNextNote(endNote, nextNote)
 
 
     # when fixing currNote we have to remove the prior note's "-" and vowel ending if it's there and reformat the notes
@@ -490,30 +491,21 @@ class parser():
     def createVCCVNotes(self, inNote, syllables):
 
         # split the syllables based on the format C*"("V*")"C*
-        syllableParts = [syllables[:syllables.index("(")], syllables[syllables.index("(") + 1:syllables.index(")")], syllables[syllables.index(")") + 1:]]
-        tempNotes = list()
-        tempNotes.append(copyNote(inNote, syllableParts[0] + syllableParts[1], location="VCCVNote"))
+        if "(" in syllables and ")" in syllables:
+            syllableParts = [syllables[:syllables.index("(")], syllables[syllables.index("(") + 1:syllables.index(")")], syllables[syllables.index(")") + 1:]]
+            tempNotes = list()
+            tempNotes.append(copyNote(inNote, syllableParts[0] + syllableParts[1], location="VCCVNote"))
 
-        # if we have an ending consonant, add the VC portion
-        if len(syllableParts[2]) > 0:
-            tempNotes.append(note(True, lyric=syllableParts[1] + syllableParts[2], pitch=inNote.pitch))
+            # if we have an ending consonant, add the VC portion
+            if len(syllableParts[2]) > 0:
+                tempNotes.append(note(True, lyric=syllableParts[1] + syllableParts[2], pitch=inNote.pitch))
 
-        inNote.subNotes.clear()
-        inNote.subNotes = tempNotes
+            inNote.subNotes.clear()
+            inNote.subNotes = tempNotes
 
-        inNote.startConst = syllableParts[0]
-        inNote.vowel = syllableParts[1]
-        inNote.endConst = syllableParts[2]
-
-        # tempFile = open("checkStuff.txt", "a")
-        # tempFile.write("Syllable Parts: %s\n" %syllableParts)
-        # for thing in tempNotes:
-        #     tempFile.write("I got syllable %s" %thing.lyric)
-        # tempFile.write("On lyric %s, subNotes:\n" %(inNote.lyric))
-        # for subNote in inNote.subNotes:
-        #     tempFile.write("subNote: %s\n" %subNote.lyric)
-
-        # tempFile.close()
+            inNote.startConst = syllableParts[0]
+            inNote.vowel = syllableParts[1]
+            inNote.endConst = syllableParts[2]
 
     # Extends a note currNote based off of the previous note's lyric.
     # Cases:
@@ -523,8 +515,6 @@ class parser():
     #       [[kla],[ak]] [-] => [kla] [[a], [ak]]
     def extendVCCVNote(self, prevNote, currNote):
         # list of vowels words can end with.
-
-        print("Extending Note %s" %prevNote.lyric)
 
         if prevNote.vowel != "":
 
@@ -660,20 +650,15 @@ class parser():
             errState = 4
 
             # add the "-" symbol to notes if the previous note is a rest or if the current lyric is a vowel following a non VV transition
-            if ((self.isRest(prevNote.subNotes[-1].lyric, prevNote.state) and currNote.state != "next") and (self.notRest(currNote.subNotes[0].lyric, currNote.state) and currNote.subNotes[0].lyric[0] != "_")) or ((self.notRest(currNote.subNotes[0].lyric, currNote.state) and currNote.state != "next") and (currNote.startConst == "" and (prevNote.endConst != "" or (prevNote.vowel + prevNote.endConst) + currNote.vowel !=currNote.subNotes[0].lyric))):
+
+
+            if self.isRest(prevNote.subNotes[-1].lyric, prevNote.state) and currNote.state != "next":
+                if self.notRest(currNote.subNotes[0].lyric, currNote.state) and currNote.subNotes[0].lyric[0] != "_":
                     currNote.subNotes[0].lyric = "-" + currNote.subNotes[0].lyric
 
-
-            # if self.isRest(prevNote.subNotes[-1].lyric, prevNote.state) and currNote.state != "next":
-                #     if self.notRest(currNote.subNotes[0].lyric, currNote.state) and currNote.subNotes[0].lyric[
-                #         0] != "_":
-                #         currNote.subNotes[0].lyric = "-" + currNote.subNotes[0].lyric
-                #
-                # elif self.notRest(currNote.subNotes[0].lyric, currNote.state) and currNote.state != "next":
-                #     if currNote.startConst == "" and (
-                #             prevNote.endConst != "" or (prevNote.vowel + prevNote.endConst) + currNote.vowel !=
-                #         currNote.subNotes[0].lyric):
-                #         currNote.subNotes[0].lyric = "-" + currNote.subNotes[0].lyric
+            elif self.notRest(currNote.subNotes[0].lyric, currNote.state) and currNote.state != "next":
+                if currNote.startConst == "" and currNote.lyric != "-" and (prevNote.endConst != "" or (prevNote.vowel + prevNote.endConst) + currNote.vowel != currNote.subNotes[0].lyric):
+                    currNote.subNotes[0].lyric = "-" + currNote.subNotes[0].lyric
 
             errState = 5
 
@@ -818,14 +803,11 @@ class parser():
             # once the initial sizes have been calculated besides the first subNote in prevNote, if we have one more note but no room to fit it,
             # divide the notes equally within the length
 
-            print("On note %s I have sum %i and my last note %s has length %s" %(prevNote.lyric, sum, prevNote.subNotes[-1], prevNote.subNotes[-1].length))
             if sum >= int(prevNote.tempLen) and len(prevNote.subNotes) > 1 and self.notRest(prevNote.subNotes[0].lyric, prevNote.state):
                 sum = 0
 
-                print("Note %s had to be divided when it had %i notes" %(prevNote.lyric, len(prevNote.subNotes)))
                 # loop through each subnote and give it an equal amount of space.
                 for myNote in prevNote.subNotes:
-                    print("On note %s changed size from %s to %s" %(myNote.lyric, myNote.length, str(int(prevNote.tempLen) // len(prevNote.subNotes))))
                     myNote.length = str(int(prevNote.tempLen) // len(prevNote.subNotes))
                     sum += int(myNote.length)
 

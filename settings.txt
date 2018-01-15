@@ -1,0 +1,4 @@
+fulllen false
+blendvowels false
+blendengvowels true
+defaultdictionary English
