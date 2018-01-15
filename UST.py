@@ -20,6 +20,7 @@ class Ust:
         self.__hasNext = False
         #saves the initial note number of the first non-prev note.
         self.__startValue = -1
+        self.__tempoDict = dict()
         #inits the ust and above variables
         if ustPath is not None:
             self.__readUst(ustPath)
@@ -60,6 +61,10 @@ class Ust:
     def startValue(self, inStart):
         self.__startValue = inStart
 
+    @property
+    def tempoDict(self):
+        return self.__tempoDict
+
     #reads the ust passed it and parses all of the data
     def __readUst(self, ustPath):
         # stateFlag is used to determine what data to expect. readUst has the following states:
@@ -75,10 +80,12 @@ class Ust:
         try:
             with open(self.__ustPath, "r") as ustFile:
                 for line in ustFile:
+
                     # first line should be [#VERSION], so skip it and then store the version info. Then go to settings
                     if stateFlag == 'version' and line[:-1] != '[#VERSION]':
                         self.__settings['[#VERSION]'] = line[:-1]
                         stateFlag = 'settings'
+
                     # read in the settings info; ignore [#SETTING] and as long as we don't find another tag, add the setting
                     # to our settings dictionary and list (for maintaining order)
                     elif stateFlag == 'settings':
@@ -86,8 +93,10 @@ class Ust:
                             self.__settingsKeys.append(line[:line.find('=')])
                             self.__settings[line[:line.find('=')]] = line[line.find('=') + 1 : -1]
                         # if we've found a new tag, signal the notes flag
+
                         elif line[:-1] != '[#SETTING]' and line[0:2] == '[#':
                             stateFlag = 'notes'
+
                             # if we're given a previous note, flag the ust and mark the next note as non-editable (see note)
                             if line[:-1] == '[#PREV]':
                                 self.__hasPrev = True
@@ -96,9 +105,11 @@ class Ust:
                             # otherwise the note was the first note. Store its initial note number
                             else:
                                 self.__startValue = getNoteNumber(line[:-1])
+
                     # read notes until we reach the end of the temp ust. read note params until we find a new note tag, which
                     # we then add the note to the note list and create a new one.
                     elif stateFlag == 'notes':
+
                         # store the note we've been making when we reach a new one. If we havnen't found the first true note,
                         # save its note number
                         if line[0:2] == '[#':
@@ -116,6 +127,8 @@ class Ust:
                         # edit the prev/next notes
                         else:
                             currNote.setProperty(line[:line.find('=')], line[line.find('=')+1:-1], True)
+                            if line[:line.find('=')] == "Tempo":
+                                self.tempoDict[len(self.notes)] = line[line.find('=')+1:-1]
 
                 # if the ust had no notes, don't add the the final note.
                 if currNote.length is not None:
@@ -135,6 +148,8 @@ class Ust:
         currNote = ""
         subNote = ""
         setting = ""
+        currTempo = self.settings["Tempo"]
+
         try:
             outFile = open(fileName, 'w')
             checkPitches = open("pitches.txt", "w")
@@ -155,8 +170,12 @@ class Ust:
             # for each note, write either the note number or the prev/next tags if it was the prev/next note.
 
             for currNote in self.__notes:
+
+                if currNote.getProperty("Tempo") is not None:
+                    currTempo = currNote.getProperty("Tempo")
+
                 for subNote in currNote.subNotes:
-                    if currNote.state == "prev" and self.__hasPrev:
+                    if currNote.state == "prev" and self.__hasPrev and subNote == currNote.subNotes[0]:
                         outFile.write('[#PREV]\n')
                         checkPitches.write('[#PREV]\n')
                     elif currNote.state == "next" and self.__hasNext:
@@ -181,7 +200,13 @@ class Ust:
                         # else:
                         outFile.write(subNote.getProperty(property) + '\n')
                         checkPitches.write(subNote.getProperty(property) + '\n')
+
+                    if currNote.getProperty("Tempo") is None and (noteCount - 1) in self.tempoDict:
+                        outFile.write("Tempo=" + currTempo + '\n')
+                        checkPitches.write("Tempo=" + currTempo + '\n')
+
                     noteCount += 1
+
 
             checkPitches.close()
 
@@ -540,18 +565,12 @@ def copyNote(inNote, lyric=None, location=""):
     if lyric is not None:
         newNote.lyric = lyric
 
+    properties = ["PBS", "PBY", "PBW", "VBR"]
 
-    if "PBS" not in inNote.getPropertiesKeys():
-        newNote.setPropertyLazy("PBS", "0")
+    for property in properties:
+        if inNote.getProperty(property) is None:
+            newNote.setPropertyLazy(property, "0")
 
-    if "PBY" not in inNote.getPropertiesKeys():
-        newNote.setPropertyLazy("PBY", "0")
-
-    if "PBW" not in inNote.getPropertiesKeys():
-        newNote.setPropertyLazy("PBW", "0")
-
-    if "VBR" not in inNote.getPropertiesKeys():
-        newNote.setPropertyLazy("VBR", "0")
 
     # newNote.setProperty("PBS", "0")
     # newNote.setProperty("PBY", "0")

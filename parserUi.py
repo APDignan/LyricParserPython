@@ -51,12 +51,16 @@ class Ui_dlogSettings(object):
         self.buttonBox.setObjectName("buttonBox")
 
         self.ckbxFullLen = QtWidgets.QCheckBox(dlogSettings)
-        self.ckbxFullLen.setGeometry(QtCore.QRect(30, 30, 301, 20))
+        self.ckbxFullLen.setGeometry(QtCore.QRect(30, 20, 301, 20))
         self.ckbxFullLen.setObjectName("ckbxFullLen")
 
         self.ckbxBlendVowels = QtWidgets.QCheckBox(dlogSettings)
-        self.ckbxBlendVowels.setGeometry(QtCore.QRect(30, 60, 281, 20))
+        self.ckbxBlendVowels.setGeometry(QtCore.QRect(30, 50, 301, 20))
         self.ckbxBlendVowels.setObjectName("ckbxBlendVowels")
+
+        self.ckbxBlendEngVowels = QtWidgets.QCheckBox(dlogSettings)
+        self.ckbxBlendEngVowels.setGeometry(QtCore.QRect(30, 80, 261, 20))
+        self.ckbxBlendEngVowels.setObjectName("ckbxBlendVowels")
 
         self.btnSaveSettings = QtWidgets.QPushButton(dlogSettings)
         self.btnSaveSettings.setGeometry(QtCore.QRect(30, 110, 93, 28))
@@ -73,15 +77,38 @@ class Ui_dlogSettings(object):
     def retranslateUi(self, dlogSettings):
         _translate = QtCore.QCoreApplication.translate
         dlogSettings.setWindowTitle(_translate("dlogSettings", "Settings"))
-        self.ckbxFullLen.setText(_translate("dlogSettings", "Extend endings based on Consonant Field"))
-        self.ckbxBlendVowels.setText(_translate("dlogSettings", "Blend Vowels with consonants"))
+        self.ckbxFullLen.setText(_translate("dlogSettings", "Extend VC endings based on the oto's Consonant field"))
+        self.ckbxBlendVowels.setText(_translate("dlogSettings", "Blend Vowels using the previous note's VC Ending"))
+        self.ckbxBlendEngVowels.setText(_translate("dlogSettings", "(English) Blend Vowels missing VV transitions"))
         self.btnSaveSettings.setText(_translate("dlogSettings", "Save Settings"))
 
     def saveSettings(self):
-        settingsFile = open("settings.txt", "w")
 
-        settingsFile.write("fulllen true\n") if self.ckbxFullLen.isChecked() else settingsFile.write("fulllen false\n")
-        settingsFile.write("blendvowels true\n") if self.ckbxBlendVowels.isChecked() else settingsFile.write("blendvowels false\n")
+        tempList = list()
+
+        with open("settings.txt", "r") as settingsFile:
+            for line in settingsFile:
+                tempList.append(line)
+        settingsFile.close()
+
+        with open("settings.txt", "w") as settingsFile:
+            for item in tempList:
+                if "fulllen" in item:
+                    settingsFile.write("fulllen true\n") if self.ckbxFullLen.isChecked() else settingsFile.write(
+                        "fulllen false\n")
+                elif "blendvowels" in item:
+                    settingsFile.write(
+                        "blendvowels true\n") if self.ckbxBlendVowels.isChecked() else settingsFile.write(
+                        "blendvowels false\n")
+                elif "blendengvowels" in item:
+                    settingsFile.write(
+                        "blendengvowels true\n") if self.ckbxBlendEngVowels.isChecked() else settingsFile.write(
+                        "blendengvowels false\n")
+                else:
+                    settingsFile.write(item)
+
+
+        settingsFile.close()
 
 class mainWindow(object):
     def setupUi(self, MainWindow):
@@ -247,8 +274,8 @@ class mainWindow(object):
         self.menuFile = QtWidgets.QMenu(self.menubar)
         self.menuFile.setObjectName("menuFile")
 
-        self.menuHelp = QtWidgets.QMenu(self.menubar)
-        self.menuHelp.setObjectName("menuHelp")
+        # self.menuHelp = QtWidgets.QMenu(self.menubar)
+        # self.menuHelp.setObjectName("menuHelp")
 
         MainWindow.setMenuBar(self.menubar)
 
@@ -264,6 +291,10 @@ class mainWindow(object):
         self.mnuSaveDictionary.setObjectName("mnuSaveDictionary")
         self.mnuSaveDictionary.triggered.connect(self.saveDictionary)
 
+        self.mnuSetDefaultDictionary = QtWidgets.QAction(MainWindow)
+        self.mnuSetDefaultDictionary.setObjectName("MnuSetDefaultDictionary")
+        self.mnuSetDefaultDictionary.triggered.connect(self.setDefaultDictionary)
+
         self.mnuSettings = QtWidgets.QAction(MainWindow)
         self.mnuSettings.setObjectName("mnuSettings")
         self.mnuSettings.triggered.connect(self.openSettingsDialog)
@@ -271,9 +302,10 @@ class mainWindow(object):
         self.menuFile.addAction(self.actionSettings)
         self.menuFile.addAction(self.mnuSettings)
         self.menuFile.addAction(self.mnuSaveDictionary)
+        self.menuFile.addAction(self.mnuSetDefaultDictionary)
 
         self.menubar.addAction(self.menuFile.menuAction())
-        self.menubar.addAction(self.menuHelp.menuAction())
+        # self.menubar.addAction(self.menuHelp.menuAction())
 
         self.retranslateUi(MainWindow)
 
@@ -329,13 +361,11 @@ class mainWindow(object):
         self.btnCancel.setText(_translate("MainWindow", "Cancel"))
 
         self.menuFile.setTitle(_translate("MainWindow", "File"))
-        self.menuHelp.setTitle(_translate("MainWindow", "Help"))
+        # self.menuHelp.setTitle(_translate("MainWindow", "Help"))
         self.actionSettings.setText(_translate("MainWindow", "Close"))
         self.mnuSaveDictionary.setText(_translate("MainWindow", "Save Dictionary"))
+        self.mnuSetDefaultDictionary.setText(_translate("MainWindow", "Set Current Dictionary As Default"))
         self.mnuSettings.setText(_translate("MainWindow", "Settings"))
-
-    # def checkCombo(self):
-    #     print("Index: " + str(self.cmbLanguage.currentIndex()) + " got : " + str(self.myParser.trieList[self.cmbLanguage.currentIndex()]))
 
     # used by search button on the dictionary page. Checks if the word given is in the dictionary, and puts any syllables
     # in the grid. If the word ends with "-" looks up any words that start with the substring.
@@ -409,7 +439,6 @@ class mainWindow(object):
         self.myParser.selectedTrie = self.myParser.trieList[self.cmbLanguage.currentIndex() - 1] if self.cmbLanguage.currentIndex() > 0 else ""
 
         if self.cmbLanguage.currentIndex() > 0:
-        # print()
             self.myParser.missingWords.clear()
             self.myParser.run()
 
@@ -561,7 +590,6 @@ class mainWindow(object):
                     self.formatVCCVNotes()
                     self.myParser.isParsed = True
             except Exception as err:
-                print("oh no: %s" %err)
                 raise err
             finally:
                 self.btnParse.setEnabled(True)
@@ -636,7 +664,11 @@ class mainWindow(object):
         if self.myParser.blendVowels == True:
             mySettings.ckbxBlendVowels.setChecked(True)
 
+        if self.myParser.ENG_VVBlend == True:
+            mySettings.ckbxBlendEngVowels.setChecked(True)
+
         mySettings.exec_()
+
         if mySettings.result() == 1:
             if mySettings.ckbxFullLen.isChecked():
                 self.myParser.fullLen = True
@@ -647,6 +679,11 @@ class mainWindow(object):
                 self.myParser.blendVowels = True
             else:
                 self.myParser.blendVowels = False
+
+            if mySettings.ckbxBlendEngVowels.isChecked():
+                self.myParser.ENG_VVBlend = True
+            else:
+                self.myParser.ENG_VVBlend = False
 
     # dialog used to import any words for the dictionary
     def openDicitonaryDialog(self):
@@ -714,6 +751,7 @@ class mainWindow(object):
     # formats the nots for the parser
     def formatVCCVNotes(self):
         for i in range(1, len(self.myParser.myUst.notes)):
+            print("formatting prev %s and curr %s" %(self.myParser.myUst.notes[i-1].lyric, self.myParser.myUst.notes[i].lyric))
             self.myParser.formatNotes(self.myParser.myUst.notes[i-1], self.myParser.myUst.notes[i])
 
         self.updateParserTable()
@@ -730,7 +768,6 @@ class mainWindow(object):
     def closeUST(self):
         self.myParser.finishPlugin()
         for trie in self.myParser.getTrieStruct:
-            print("I got trie: %s" %trie)
             self.myParser.getTrieStruct[trie].printTrieToFile()
 
         # self.myParser.myTrie.printTrieToFile()
@@ -738,11 +775,31 @@ class mainWindow(object):
 
     # saves the current dictionary to the dictionary file
     def saveDictionary(self):
-        self.myParser.myTrie.printTrieToFile()
+        if self.myParser.selectedTrie in self.myParser.trieList:
+            self.myParser.myTrie.printTrieToFile()
+
+    def setDefaultDictionary(self):
+
+        tempList = list()
+
+        with open("settings.txt", "r") as settingsFile:
+            for line in settingsFile:
+                tempList.append(line)
+        settingsFile.close()
+
+        with open("settings.txt", "w") as settingsFile:
+            for item in tempList:
+                if "defaultdictionary" not in item:
+                    settingsFile.write(item)
+
+            if self.cmbLanguage.currentIndex() > 0:
+                settingsFile.write("defaultdictionary " + self.myParser.trieList[self.cmbLanguage.currentIndex() - 1] + "\n")
+
+        settingsFile.close()
+
 
     # on closing the window just save the dictionary
     def closeWindow(self):
-        self.saveDictionary()
         window.close()
 
 # dialog used to import user data
@@ -762,16 +819,14 @@ class myApp(QMainWindow):
         super().__init__()
         self.ui =  mainWindow()
         self.ui.setupUi(self)
-        self.ui.parseUST()
-        # for i in range(0, self.ui.tblParserOutput.rowCount()):
-        #     self.ui.originalParse.append(self.ui.tblParserOutput.item(i, 2).text())
 
         for item in self.ui.myParser.trieList:
             self.ui.cmbLanguage.addItem(item)
 
-            #if item == self.ui.myParser.selectedTrie:
-                #self.ui.cmbLanguage.setCurrentIndex(self.ui.cmbLanguage.size() - 1)
+            if item == self.ui.myParser.selectedTrie:
+                self.ui.cmbLanguage.setCurrentIndex(self.ui.cmbLanguage.findText(item, QtCore.Qt.MatchFixedString))
 
+        self.ui.parseUST()
         self.show()
 
 # used to store the data regarding the initial data stored in the dictionary
