@@ -144,7 +144,6 @@ class parser():
         return self.__selectedTrie
     @selectedTrie.setter
     def selectedTrie(self, inSelectedTrie):
-        print("Changing selected Trie from %s to %s" %(self.__selectedTrie, inSelectedTrie))
         self.__selectedTrie = inSelectedTrie
 
     @property
@@ -205,7 +204,8 @@ class parser():
     def finishPlugin(self):
         errState = 0
         try:
-            self.myUst.closeUst(self.myUst.ustPath)
+            if self.isParsed:
+                self.myUst.closeUst(self.myUst.ustPath)
         except ParserException as pErr:
             raise pErr
         except Exception as err:
@@ -281,7 +281,7 @@ class parser():
                             lastNote = index
 
                     # if the lyric ends with "-" then we have a multiple-syllable word.
-                    elif lastNote > -1 and lyric[-1] == '-':
+                    elif lyric[-1] == '-':
                         counter = 0
                         numSylls = 0
                         currLyric = ""
@@ -435,13 +435,13 @@ class parser():
                 index+= 1
 
             # Only format the notes if we've already parsed the ust
-            # if self.isParsed:
-            index = inMissingNote.startNote + 1
-            self.fixPrevNote(prevNote, currNote)
-            while index < inMissingNote.startNote + inMissingNote.range:
-                self.formatNotes(self.myUst.notes[index - 1], self.myUst.notes[index])
-                index += 1
-            self.fixNextNote(endNote, nextNote)
+            if self.isParsed:
+                index = inMissingNote.startNote + 1
+                self.fixPrevNote(prevNote, currNote)
+                while index < inMissingNote.startNote + inMissingNote.range:
+                    self.formatNotes(self.myUst.notes[index - 1], self.myUst.notes[index])
+                    index += 1
+                self.fixNextNote(endNote, nextNote)
 
 
     # when fixing currNote we have to remove the prior note's "-" and vowel ending if it's there and reformat the notes
@@ -631,6 +631,7 @@ class parser():
 
             # Try seeing if the note's CV and VC portions have been parsed and, if not, parse them
             # First test if the first subNote (always the psuedoVCCV CV) is in the oto. If not, then test it should be a CCV to be parsed
+
             if self.checkOto(currNote.subNotes[0].lyric, myPrefix, mySuffix) is None:
 
                 # if we start with at least 2 consonants and we're a valid note, then add the "proper" CCV notes
@@ -657,7 +658,7 @@ class parser():
                     currNote.subNotes[0].lyric = "-" + currNote.subNotes[0].lyric
 
             elif self.notRest(currNote.subNotes[0].lyric, currNote.state) and currNote.state != "next":
-                if currNote.startConst == "" and currNote.lyric != "-" and (prevNote.endConst != "" or (prevNote.vowel + prevNote.endConst) + currNote.vowel != currNote.subNotes[0].lyric):
+                if currNote.startConst == "" and currNote.lyric != "-" and (currNote.state != "VV"):
                     currNote.subNotes[0].lyric = "-" + currNote.subNotes[0].lyric
 
             errState = 5
@@ -846,7 +847,6 @@ class parser():
                         # otherwise if the first subnote's length is less than fullLen but the last subnote's length + 60
                         # and doubled is less than the first subnote's length, then take 60 length from the first note and give it to the note.
                         elif int(prevNote.subNotes[0].length) < fullLen and (int(prevNote.subNotes[-1].length) + 60) * 2 <= int(prevNote.subNotes[0].length):
-                            print("First note is %s with len %s and last note is %s with len %s" %(prevNote.subNotes[0].lyric, prevNote.subNotes[0].length, prevNote.subNotes[-1].lyric, prevNote.subNotes[-1].length))
                             prevNote.subNotes[0].length = str(int(prevNote.subNotes[0].length) - 60)
                             prevNote.subNotes[-1].length = str(int(prevNote.subNotes[-1].length) + 60)
 

@@ -2936,7 +2936,7 @@ _movements: m(o)v:m(i)nts
 _moves: m(o)vz
 _movie: m(o):v(E)
 _movies: m(o):v(E)z
-_moving: m(O):v(1)ng
+_moving: m(o):v(1)ng
 _mozaik: m(O):z(I)k
 _mr: m(i)s:t(3)
 _mrs: m(i):s(i)z

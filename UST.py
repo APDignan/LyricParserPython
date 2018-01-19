@@ -152,15 +152,15 @@ class Ust:
 
         try:
             outFile = open(fileName, 'w')
-            checkPitches = open("pitches.txt", "w")
+            # checkPitches = open("pitches.txt", "w")
 
             # write the version and setting information using the settingsKey list for order
             outFile.write('[#VERSION]\n' + self.__settings['[#VERSION]'] + '\n' + '[#SETTING]\n')
-            checkPitches.write('[#VERSION]\n' + self.__settings['[#VERSION]'] + '\n' + '[#SETTING]\n')
+            # checkPitches.write('[#VERSION]\n' + self.__settings['[#VERSION]'] + '\n' + '[#SETTING]\n')
             errState = 1
             for setting in self.__settingsKeys:
                 outFile.write(setting + '=' + self.__settings[setting] + '\n')
-                checkPitches.write(setting + '=' + self.__settings[setting] + '\n')
+                # checkPitches.write(setting + '=' + self.__settings[setting] + '\n')
 
             # get the index to label the notes as well as the list of parameters that had split data
             currentIndex = self.__startValue
@@ -177,20 +177,20 @@ class Ust:
                 for subNote in currNote.subNotes:
                     if currNote.state == "prev" and self.__hasPrev and subNote == currNote.subNotes[0]:
                         outFile.write('[#PREV]\n')
-                        checkPitches.write('[#PREV]\n')
+                        # checkPitches.write('[#PREV]\n')
                     elif currNote.state == "next" and self.__hasNext:
                         outFile.write('[#NEXT]\n')
-                        checkPitches.write('[#NEXT]\n')
+                        # checkPitches.write('[#NEXT]\n')
                     else:
                         outFile.write(convertNoteNumber(currentIndex) + '\n')
-                        checkPitches.write(convertNoteNumber(currentIndex) + '\n')
+                        # checkPitches.write(convertNoteNumber(currentIndex) + '\n')
                         currentIndex += 1
 
                     # for each parameter in the note, write the parameter. Any paramter in splitProperties has its properties
                     # reformatted for the ust
                     for property in subNote.getPropertiesKeys():
                         outFile.write(property + '=')
-                        checkPitches.write(property + '=')
+                        # checkPitches.write(property + '=')
                         # if property in splitProperties:
                         #     currProperty = ""
                         #     for val in subNote.getProperty(property):
@@ -199,16 +199,16 @@ class Ust:
                         #     checkPitches.write("For lyric %s and property %s I got %s\n" %(subNote.lyric, property, subNote.getProperty(property)))
                         # else:
                         outFile.write(subNote.getProperty(property) + '\n')
-                        checkPitches.write(subNote.getProperty(property) + '\n')
+                        # checkPitches.write(subNote.getProperty(property) + '\n')
 
                     if currNote.getProperty("Tempo") is None and (noteCount - 1) in self.tempoDict:
                         outFile.write("Tempo=" + currTempo + '\n')
-                        checkPitches.write("Tempo=" + currTempo + '\n')
+                        # checkPitches.write("Tempo=" + currTempo + '\n')
 
                     noteCount += 1
 
 
-            checkPitches.close()
+            # checkPitches.close()
 
         except Exception as err:
             if errState == 0:

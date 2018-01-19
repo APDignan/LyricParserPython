@@ -9,7 +9,6 @@
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMainWindow, QApplication, QDialog, QHeaderView
-# noinspection PyUnresolvedReferences
 import main
 from main import parser, missingNote
 
@@ -52,15 +51,15 @@ class Ui_dlogSettings(object):
         self.buttonBox.setObjectName("buttonBox")
 
         self.ckbxFullLen = QtWidgets.QCheckBox(dlogSettings)
-        self.ckbxFullLen.setGeometry(QtCore.QRect(30, 20, 301, 20))
+        self.ckbxFullLen.setGeometry(QtCore.QRect(30, 20, 335, 20))
         self.ckbxFullLen.setObjectName("ckbxFullLen")
 
         self.ckbxBlendVowels = QtWidgets.QCheckBox(dlogSettings)
-        self.ckbxBlendVowels.setGeometry(QtCore.QRect(30, 50, 301, 20))
+        self.ckbxBlendVowels.setGeometry(QtCore.QRect(30, 50, 311, 20))
         self.ckbxBlendVowels.setObjectName("ckbxBlendVowels")
 
         self.ckbxBlendEngVowels = QtWidgets.QCheckBox(dlogSettings)
-        self.ckbxBlendEngVowels.setGeometry(QtCore.QRect(30, 80, 261, 20))
+        self.ckbxBlendEngVowels.setGeometry(QtCore.QRect(30, 80, 311, 20))
         self.ckbxBlendEngVowels.setObjectName("ckbxBlendVowels")
 
         self.btnSaveSettings = QtWidgets.QPushButton(dlogSettings)
@@ -287,6 +286,7 @@ class mainWindow(object):
 
         self.actionSettings = QtWidgets.QAction(MainWindow)
         self.actionSettings.setObjectName("actionSettings")
+        self.actionSettings.triggered.connect(self.closeWindow)
 
         self.mnuSaveDictionary = QtWidgets.QAction(MainWindow)
         self.mnuSaveDictionary.setObjectName("mnuSaveDictionary")
@@ -456,13 +456,18 @@ class mainWindow(object):
                         item.setText(missingList[i])
                         self.tblErrors.setItem(count, i, item)
                     count += 1
+            else:
+                self.tblErrors.setRowCount(0)
+                self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabError), "Errors")
 
             self.updateParserTable()
+            self.myParser.isParsed = False
 
         # store the current parsing of the ust to check for updates
         self.originalParse.clear()
         for i in range(0, self.tblParserOutput.rowCount()):
             self.originalParse.append(self.tblParserOutput.item(i, 2).text())
+
 
     # updates the parser grid based on the current state of the UST
     def updateParserTable(self):
@@ -520,11 +525,15 @@ class mainWindow(object):
     def addWordsToDictionaryAndUpdate(self):
         rowCount = self.tblErrors.rowCount()
         delCount = 0
+        oldDelCount = 0
+        tempMissingWords = list()
 
         # loop through each row in the errors page. If the user tried to fix a word then insert it into the dictionary
         # and fix whatever note triggered the error
         for i in range(0, rowCount):
             inSyll = self.tblErrors.item(i - delCount, 2).text()
+            oldDelCount = delCount
+            #print("Checking on word %s from the missingWords %s with num sylls %i" %(self.tblErrors.item(i - delCount, 0).text(), self.myParser.missingWords[i].lyric, self.myParser.missingWords[i].numSylls))
             if len(inSyll) > 0 and len(inSyll.split(":")) == self.myParser.missingWords[i].numSylls:
                 self.myParser.missingWords[i].fixedSylls = inSyll.split(":") if len(inSyll.split(":")) > 1 else inSyll
                 self.myParser.myTrie.insertWord(self.myParser.missingWords[i].lyric, [inSyll])
@@ -535,12 +544,21 @@ class mainWindow(object):
             # if no fix was made, then see if the word was added either through the dictionary or an earlier note in the
             # function. If so update the note based on what's in the dictionary.
             elif len(inSyll) == 0:
-                tempSylls = self.myParser.getSyllables(self.myParser.myTrie.getWord(self.myParser.missingWords[i].lyric), self.myParser.missingWords[i].numSylls)
-                if tempSylls is not None:
-                    self.myParser.missingWords[i].fixedSylls = tempSylls
+                if self.myParser.missingWords[i].lyric == "-" and self.myParser.myUst.notes[self.myParser.missingWords[i].lastNote].state != 'MIA':
                     self.myParser.parseFixedVCCV(self.myParser.missingWords[i])
                     self.tblErrors.removeRow(i - delCount)
+                    self.myParser.myUst.notes[self.myParser.missingWords[i].lastNote].state = 'extended'
                     delCount += 1
+                else:
+                    tempSylls = self.myParser.getSyllables(self.myParser.myTrie.getWord(self.myParser.missingWords[i].lyric), self.myParser.missingWords[i].numSylls)
+                    if tempSylls is not None:
+                        self.myParser.missingWords[i].fixedSylls = tempSylls
+                        self.myParser.parseFixedVCCV(self.myParser.missingWords[i])
+                        self.tblErrors.removeRow(i - delCount)
+                        delCount += 1
+
+            if delCount == oldDelCount:
+                tempMissingWords.append(self.myParser.missingWords[i])
 
         # update the Error tab text with the number of errors
         if self.tblErrors.rowCount() > 0:
@@ -551,6 +569,10 @@ class mainWindow(object):
                                       "Errors")
 
         # update the parser grid based
+        self.myParser.missingWords.clear()
+        for missingWord in tempMissingWords:
+            self.myParser.missingWords = missingWord
+
         self.updateParserTable()
 
     # used to update any words in the dictionary that had their pronunciation changed
@@ -581,7 +603,9 @@ class mainWindow(object):
             # updates the Ust with any changes the user made on the Parser page
             self.btnParse.setEnabled(False)
             try:
+
                 self.updateUst()
+
                 # formats the notes into the VCCV format
                 if self.myParser.isParsed:
                     for i in range (1, len(self.myParser.myUst.notes)):
@@ -618,7 +642,7 @@ class mainWindow(object):
                     self.myParser.createVCCVNotes(self.myParser.myUst.notes[i], inSyllables)
 
                 # otherwise if the word does not match the original lyric, reparse the note.
-                elif inWord != self.originalParse[i]:
+                elif inWord != self.originalParse[i] and self.myParser.myUst.notes[i].state != 'extended':
                     index = i
                     numSylls = 0
                     totalLen = 0
@@ -752,7 +776,6 @@ class mainWindow(object):
     # formats the nots for the parser
     def formatVCCVNotes(self):
         for i in range(1, len(self.myParser.myUst.notes)):
-            print("formatting prev %s and curr %s" %(self.myParser.myUst.notes[i-1].lyric, self.myParser.myUst.notes[i].lyric))
             self.myParser.formatNotes(self.myParser.myUst.notes[i-1], self.myParser.myUst.notes[i])
 
         self.updateParserTable()
