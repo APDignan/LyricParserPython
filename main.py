@@ -168,7 +168,6 @@ class parser():
 
             testFile = open(sys.argv[1])
 
-
             myErr = 2
 
             self.myUst = Ust(sys.argv[1])

@@ -140,6 +140,7 @@ class Ust:
                 if lineCount > 0 else ParserException("ERROR: (Finding UST) Could not open UST at %s" % self.__ustPath)
         finally:
             ustFile.close()
+
     # closeUst: given a file location, write the current ust file to it. You'll want to use the ustPath initially passed
     # into it to rewrite the current ust file.
     def closeUst(self, fileName):
@@ -317,6 +318,8 @@ class Ust:
 class note:
     # by default just creates an empty note, but passing default = True will create a note with predetermined values.
     # One can define some of these values using the proper parameters.
+
+
     def __init__(self, default = False, length = "480", lyric = 'a', pitch = "60"):
         self.__properties = dict()
         self.__propertiesKeys = list()
@@ -330,6 +333,8 @@ class note:
         self.__startConst = ""
         self.__vowel = ""
         self.__endConst = ""
+        self.__lyric = lyric
+
 
         # sets default properties
         if default == True:
@@ -577,6 +582,12 @@ def copyNote(inNote, lyric=None, location=""):
     # newNote.setProperty("PBW", "0")
 
     return newNote
+
+def main():
+    myNote = note(default=False)
+    print("My lyric is " + str(myNote.lyric))
+
+main()
 
 
 
