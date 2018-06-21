@@ -372,6 +372,7 @@ class mainWindow(object):
     # in the grid. If the word ends with "-" looks up any words that start with the substring.
     def checkWord(self):
         inWord = self.ltxtDictionaryInput.text().lower()
+
         self.myDictionary.clear()
 
         # if the word ends with a "-", look up all of the words that start with the substring and put them on the grid
@@ -439,6 +440,7 @@ class mainWindow(object):
         # go through each note and try to find the lyric in the dictionary
         self.myParser.selectedTrie = self.myParser.trieList[self.cmbLanguage.currentIndex() - 1] if self.cmbLanguage.currentIndex() > 0 else ""
 
+
         if self.cmbLanguage.currentIndex() > 0:
             self.myParser.missingWords.clear()
             self.myParser.run()
@@ -478,6 +480,7 @@ class mainWindow(object):
         # loop through each note in the UST
         for note in self.myParser.myUst.notes:
             inserts = [str(count), note.lyric, note.parentLyric]
+            # print("Inserts are %s, %s, %s" %(inserts[0], inserts[1], inserts[2]))
 
             # add the index, the lyric, and the lyric found in the grid
             for insert in inserts:
@@ -488,8 +491,11 @@ class mainWindow(object):
 
             # concatenate the syllables to the psuedo VCCV format
             sylls = ""
+            # print("Getting syls for " + note.lyric + " with " + str(len(note.subNotes)) + " subnotes")
             for subNote in note.subNotes:
+                # print("Subnote: " + subNote.lyric)
                 sylls = sylls + "," + subNote.lyric if sylls != "" else subNote.lyric
+
 
             # add the row into the group
             item = QtWidgets.QTableWidgetItem()
@@ -533,7 +539,7 @@ class mainWindow(object):
         for i in range(0, rowCount):
             inSyll = self.tblErrors.item(i - delCount, 2).text()
             oldDelCount = delCount
-            #print("Checking on word %s from the missingWords %s with num sylls %i" %(self.tblErrors.item(i - delCount, 0).text(), self.myParser.missingWords[i].lyric, self.myParser.missingWords[i].numSylls))
+            # print("Checking on word %s from the missingWords %s with num sylls %i" %(self.tblErrors.item(i - delCount, 0).text(), self.myParser.missingWords[i].lyric, self.myParser.missingWords[i].numSylls))
             if len(inSyll) > 0 and len(inSyll.split(":")) == self.myParser.missingWords[i].numSylls:
                 self.myParser.missingWords[i].fixedSylls = inSyll.split(":") if len(inSyll.split(":")) > 1 else inSyll
                 self.myParser.myTrie.insertWord(self.myParser.missingWords[i].lyric, [inSyll])
@@ -605,7 +611,6 @@ class mainWindow(object):
             try:
 
                 self.updateUst()
-
                 # formats the notes into the VCCV format
                 if self.myParser.isParsed:
                     for i in range (1, len(self.myParser.myUst.notes)):
@@ -623,6 +628,7 @@ class mainWindow(object):
     # while changing the lyric updates the lyric.
     def updateUst(self):
 
+
         canParse = -1
         # loop through all of the notes besides the perv and next notes
         for i in range(1, self.tblParserOutput.rowCount()):
@@ -636,13 +642,16 @@ class mainWindow(object):
                 for note in self.myParser.myUst.notes[i].subNotes:
                     tempSyll = tempSyll + note.lyric + ","
 
+                # print("inSyllables: " + inSyllables + " tempSyll: " + tempSyll)
+
                 # if the syllables do not equal the original syllables, replace them
                 if inSyllables != tempSyll[:-1]:
+                    # print("Replacing sylls since inSyll does not equal tempSyll")
                     self.myParser.myUst.notes[i].subNotes.clear()
-                    self.myParser.createVCCVNotes(self.myParser.myUst.notes[i], inSyllables)
+                    self.myParser.createVCCVNotes(self.myParser.myUst.notes[i], inSyllables, update=True)
 
                 # otherwise if the word does not match the original lyric, reparse the note.
-                elif inWord != self.originalParse[i] and self.myParser.myUst.notes[i].state != 'extended':
+                elif i < len(self.originalParse) and inWord != self.originalParse[i] and self.myParser.myUst.notes[i].state != 'extended' and self.myParser.myUst.notes[i].state != "noNext":
                     index = i
                     numSylls = 0
                     totalLen = 0
@@ -662,12 +671,13 @@ class mainWindow(object):
                             index += 1
                             totalLen += 1
 
+
                     # create a missingNote object to format the information for fixing the notes
                     myMissingNote = missingNote(inLyric = finalLyric, inNumSylls= numSylls, inStartNote=index - totalLen, inRange= totalLen)
 
                     # if the finalLyric is an actual word and we were able to find a valid pronunciation, parse it
-                    if finalLyric != "" and self.myParser.getSyllables(
-                            self.myParser.myTrie.getWord(finalLyric), numSylls) is not None:
+                    if finalLyric != "" and self.myParser.getSyllables(self.myParser.myTrie.getWord(finalLyric), numSylls) is not None:
+
                         myMissingNote.fixedSylls = self.myParser.getSyllables(self.myParser.myTrie.getWord(finalLyric), numSylls)
                         self.myParser.parseFixedVCCV(myMissingNote, fullClear=True)
                     # otherwise treat it like a mixxing word
@@ -676,7 +686,11 @@ class mainWindow(object):
 
                     # prevent editing notes until we reach the end of the current lyric
                     canParse = index
+                # else:
+                    # print("I equals " + str(i) + "/" + str(len(self.originalParse)) + " with lyric " + self.myParser.myUst.notes[i].lyric)
 
+
+        self.updateParserTable()
 
     #_word: word1|word2
     #word word1|word2
@@ -778,6 +792,9 @@ class mainWindow(object):
         for i in range(1, len(self.myParser.myUst.notes)):
             self.myParser.formatNotes(self.myParser.myUst.notes[i-1], self.myParser.myUst.notes[i])
 
+        if self.myParser.myUst.hasNext == False:
+            self.myParser.formatNotes(self.myParser.myUst.notes[-1], None)
+
         self.updateParserTable()
 
     # testing function, ignore
@@ -850,7 +867,7 @@ class myApp(QMainWindow):
             if item == self.ui.myParser.selectedTrie:
                 self.ui.cmbLanguage.setCurrentIndex(self.ui.cmbLanguage.findText(item, QtCore.Qt.MatchFixedString))
 
-        self.ui.parseUST()
+        # self.ui.parseUST()
         self.show()
 
 # used to store the data regarding the initial data stored in the dictionary

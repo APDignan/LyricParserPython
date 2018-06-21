@@ -2,10 +2,19 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="80d6aee8-0ad9-4bc7-b1ef-07de796e5365" name="Default" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/Settings.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/addWordUi.py" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/build/parserUi/base_library.zip" afterPath="$PROJECT_DIR$/build/parserUi/base_library.zip" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/build/parserUi/out00-PKG.pkg" afterPath="$PROJECT_DIR$/build/parserUi/out00-PKG.pkg" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/build/parserUi/out00-PYZ.pyz" afterPath="$PROJECT_DIR$/build/parserUi/out00-PYZ.pyz" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UST.py" afterPath="$PROJECT_DIR$/UST.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/utauGen.py" afterPath="$PROJECT_DIR$/utauGen.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/build/parserUi/out00-Analysis.toc" afterPath="$PROJECT_DIR$/build/parserUi/out00-Analysis.toc" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/build/parserUi/out00-EXE.toc" afterPath="$PROJECT_DIR$/build/parserUi/out00-EXE.toc" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/build/parserUi/out00-PKG.toc" afterPath="$PROJECT_DIR$/build/parserUi/out00-PKG.toc" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/build/parserUi/out00-PYZ.toc" afterPath="$PROJECT_DIR$/build/parserUi/out00-PYZ.toc" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/build/parserUi/warnparserUi.txt" afterPath="$PROJECT_DIR$/build/parserUi/warnparserUi.txt" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/build/parserUi/xref-parserUi.html" afterPath="$PROJECT_DIR$/build/parserUi/xref-parserUi.html" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/main.py" afterPath="$PROJECT_DIR$/main.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/parserUi.py" afterPath="$PROJECT_DIR$/parserUi.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -16,21 +25,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="375">
-      <file leaf-file-name="main.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/main.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-14785">
-              <caret line="9" column="32" lean-forward="true" selection-start-line="9" selection-start-column="32" selection-end-line="9" selection-end-column="32" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="parserUi.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="parserUi.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/parserUi.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="15485">
-              <caret line="815" column="46" lean-forward="false" selection-start-line="815" selection-start-column="46" selection-end-line="815" selection-end-column="46" />
+            <state relative-caret-position="3349">
+              <caret line="805" column="22" lean-forward="false" selection-start-line="805" selection-start-column="16" selection-end-line="805" selection-end-column="22" />
               <folding>
                 <element signature="e#194#204#0" expanded="true" />
               </folding>
@@ -38,22 +37,32 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="ParserException.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/ParserException.py">
+      <file leaf-file-name="main.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="57">
-              <caret line="3" column="26" lean-forward="false" selection-start-line="3" selection-start-column="26" selection-end-line="3" selection-end-column="26" />
-              <folding />
+            <state relative-caret-position="271">
+              <caret line="953" column="22" lean-forward="false" selection-start-line="953" selection-start-column="16" selection-end-line="953" selection-end-column="22" />
+              <folding>
+                <element signature="e#0#10#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="main.spec" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/main.spec">
+      <file leaf-file-name="UST.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/UST.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="0">
-              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-              <folding />
+            <state relative-caret-position="722">
+              <caret line="74" column="29" lean-forward="false" selection-start-line="74" selection-start-column="29" selection-end-line="74" selection-end-column="29" />
+              <folding>
+                <element signature="e#0#23#0" expanded="true" />
+                <element signature="e#17932#17968#0" expanded="false" />
+                <element signature="e#18037#18079#0" expanded="false" />
+                <element signature="e#18129#18166#0" expanded="false" />
+                <element signature="e#18238#18282#0" expanded="false" />
+                <element signature="e#18478#18497#0" expanded="false" />
+                <element signature="e#18793#18815#0" expanded="false" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -61,8 +70,30 @@
       <file leaf-file-name="OTO.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/OTO.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="418">
-              <caret line="22" column="12" lean-forward="true" selection-start-line="22" selection-start-column="12" selection-end-line="22" selection-end-column="12" />
+            <state relative-caret-position="380">
+              <caret line="22" column="12" lean-forward="false" selection-start-line="22" selection-start-column="12" selection-end-line="22" selection-end-column="12" />
+              <folding>
+                <element signature="e#0#22#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Trie.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Trie.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="3534">
+              <caret line="186" column="32" lean-forward="false" selection-start-line="186" selection-start-column="32" selection-end-line="186" selection-end-column="32" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="PREFIX.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/PREFIX.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="2755">
+              <caret line="148" column="30" lean-forward="false" selection-start-line="148" selection-start-column="30" selection-end-line="148" selection-end-column="30" />
               <folding>
                 <element signature="e#0#22#0" expanded="true" />
               </folding>
@@ -80,41 +111,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="UST.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/UST.py">
+      <file leaf-file-name="ParserException.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/ParserException.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="5719">
-              <caret line="301" column="0" lean-forward="true" selection-start-line="301" selection-start-column="0" selection-end-line="301" selection-end-column="0" />
-              <folding>
-                <element signature="e#0#23#0" expanded="true" />
-                <element signature="e#17134#17170#0" expanded="false" />
-                <element signature="e#17239#17281#0" expanded="false" />
-                <element signature="e#17331#17368#0" expanded="false" />
-                <element signature="e#17440#17484#0" expanded="false" />
-                <element signature="e#17680#17699#0" expanded="false" />
-                <element signature="e#17995#18017#0" expanded="false" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="PREFIX.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/PREFIX.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2812">
-              <caret line="148" column="30" lean-forward="false" selection-start-line="148" selection-start-column="30" selection-end-line="148" selection-end-column="30" />
-              <folding>
-                <element signature="e#0#22#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="Trie.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Trie.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="114">
-              <caret line="186" column="32" lean-forward="false" selection-start-line="186" selection-start-column="32" selection-end-line="186" selection-end-column="32" />
+            <state relative-caret-position="57">
+              <caret line="3" column="26" lean-forward="false" selection-start-line="3" selection-start-column="26" selection-end-line="3" selection-end-column="26" />
               <folding />
             </state>
           </provider>
@@ -131,12 +132,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>updateAn</find>
-      <find>ParseUst</find>
-      <find>btn</find>
-      <find>handleParseButton</find>
-      <find>updateUST</find>
-      <find>closeUST</find>
       <find>printTrieToFile()</find>
       <find>saveDictionary</find>
       <find>parse</find>
@@ -153,14 +148,20 @@
       <find>Andupdate</find>
       <find>missingWords</find>
       <find>actionSettings</find>
-      <find>print(</find>
-      <find>parseUST</find>
       <find>pitches</find>
       <find>prefixMapItem()</find>
       <find>prefixMapItem(</find>
       <find>note(</find>
-      <find>note(</find>
       <find>note.</find>
+      <find>My lyr</find>
+      <find>next</find>
+      <find>formatVCCVNotes()</find>
+      <find>location</find>
+      <find>formatVCC</find>
+      <find>tempLen</find>
+      <find>originalParse</find>
+      <find>parseUST</find>
+      <find>print(</find>
     </findStrings>
     <replaceStrings>
       <replace>inData.myUst</replace>
@@ -190,19 +191,20 @@
         <option value="$PROJECT_DIR$/Trie.py" />
         <option value="$PROJECT_DIR$/blajdslfk.py" />
         <option value="$PROJECT_DIR$/outDic.txt" />
-        <option value="$PROJECT_DIR$/parserUi.py" />
         <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_1.py" />
         <option value="$PROJECT_DIR$/PREFIX.py" />
         <option value="$PROJECT_DIR$/OTO.py" />
         <option value="$PROJECT_DIR$/FileTester" />
-        <option value="$PROJECT_DIR$/main.py" />
         <option value="$PROJECT_DIR$/utauGen.py" />
         <option value="$PROJECT_DIR$/UST.py" />
+        <option value="$PROJECT_DIR$/usttest.py" />
+        <option value="$PROJECT_DIR$/parserUi.py" />
+        <option value="$PROJECT_DIR$/main.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="952" />
+    <option name="x" value="-8" />
     <option name="width" value="976" />
     <option name="height" value="1038" />
   </component>
@@ -223,6 +225,7 @@
     </navigator>
     <panes>
       <pane id="Scope" />
+      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -234,13 +237,12 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
-    <property name="SearchEverywhereHistoryKey" value="&#9;FILE&#9;file://C:/Users/Andrew/Desktop/LyricParserPython/parserUi.py" />
+    <property name="SearchEverywhereHistoryKey" value="&#9;FILE&#9;file://C:/Users/Andrew/Desktop/Programming/LyricParserPython/parserUi.py" />
     <property name="com.intellij.ide.scratch.LRUPopupBuilder$2/Languages" value="Python" />
   </component>
   <component name="RecentsManager">
@@ -381,9 +383,8 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-9" y="-9" width="1938" height="1048" extended-state="6" />
-    <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.10104167" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.125" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
@@ -413,7 +414,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/Note.py" />
     <entry file="file://$PROJECT_DIR$/out.txt" />
     <entry file="file://$PROJECT_DIR$/Trie.py">
       <provider selected="true" editor-type-id="text-editor">
@@ -429,7 +429,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="133">
           <caret line="8" column="0" lean-forward="false" selection-start-line="8" selection-start-column="0" selection-end-line="9" selection-end-column="42" />
-          <folding />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -448,7 +450,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="190">
           <caret line="11" column="36" lean-forward="false" selection-start-line="11" selection-start-column="36" selection-end-line="11" selection-end-column="36" />
-          <folding />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -549,51 +553,21 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/addWordUi.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="133">
-          <caret line="7" column="0" lean-forward="false" selection-start-line="7" selection-start-column="0" selection-end-line="7" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/FileTester">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2223">
-          <caret line="117" column="51" lean-forward="false" selection-start-line="117" selection-start-column="51" selection-end-line="117" selection-end-column="51" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/main.spec">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/addWordUi.py" />
+    <entry file="file://$PROJECT_DIR$/FileTester" />
     <entry file="file://$PROJECT_DIR$/OTO.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="418">
-          <caret line="22" column="12" lean-forward="true" selection-start-line="22" selection-start-column="12" selection-end-line="22" selection-end-column="12" />
+        <state relative-caret-position="380">
+          <caret line="22" column="12" lean-forward="false" selection-start-line="22" selection-start-column="12" selection-end-line="22" selection-end-column="12" />
           <folding>
             <element signature="e#0#22#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/ParserException.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="57">
-          <caret line="3" column="26" lean-forward="false" selection-start-line="3" selection-start-column="26" selection-end-line="3" selection-end-column="26" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/PREFIX.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2812">
+        <state relative-caret-position="2755">
           <caret line="148" column="30" lean-forward="false" selection-start-line="148" selection-start-column="30" selection-end-line="148" selection-end-column="30" />
           <folding>
             <element signature="e#0#22#0" expanded="true" />
@@ -601,18 +575,18 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Settings.py">
+    <entry file="file://$PROJECT_DIR$/Settings.py" />
+    <entry file="file://$PROJECT_DIR$/main.spec">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="513">
-          <caret line="27" column="61" lean-forward="true" selection-start-line="27" selection-start-column="61" selection-end-line="27" selection-end-column="61" />
-          <folding />
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Trie.py">
+    <entry file="file://$PROJECT_DIR$/ParserException.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="114">
-          <caret line="186" column="32" lean-forward="false" selection-start-line="186" selection-start-column="32" selection-end-line="186" selection-end-column="32" />
+        <state relative-caret-position="57">
+          <caret line="3" column="26" lean-forward="false" selection-start-line="3" selection-start-column="26" selection-end-line="3" selection-end-column="26" />
           <folding />
         </state>
       </provider>
@@ -625,36 +599,54 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/parserUi.py">
+    <entry file="file://$PROJECT_DIR$/Trie.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="15485">
-          <caret line="815" column="46" lean-forward="false" selection-start-line="815" selection-start-column="46" selection-end-line="815" selection-end-column="46" />
-          <folding>
-            <element signature="e#194#204#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="3534">
+          <caret line="186" column="32" lean-forward="false" selection-start-line="186" selection-start-column="32" selection-end-line="186" selection-end-column="32" />
+          <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/main.py">
+    <entry file="file://$PROJECT_DIR$/usttest.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-14785">
-          <caret line="9" column="32" lean-forward="true" selection-start-line="9" selection-start-column="32" selection-end-line="9" selection-end-column="32" />
+        <state relative-caret-position="285">
+          <caret line="15" column="37" lean-forward="false" selection-start-line="15" selection-start-column="37" selection-end-line="15" selection-end-column="37" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/UST.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="5719">
-          <caret line="301" column="0" lean-forward="true" selection-start-line="301" selection-start-column="0" selection-end-line="301" selection-end-column="0" />
+        <state relative-caret-position="722">
+          <caret line="74" column="29" lean-forward="false" selection-start-line="74" selection-start-column="29" selection-end-line="74" selection-end-column="29" />
           <folding>
             <element signature="e#0#23#0" expanded="true" />
-            <element signature="e#17134#17170#0" expanded="false" />
-            <element signature="e#17239#17281#0" expanded="false" />
-            <element signature="e#17331#17368#0" expanded="false" />
-            <element signature="e#17440#17484#0" expanded="false" />
-            <element signature="e#17680#17699#0" expanded="false" />
-            <element signature="e#17995#18017#0" expanded="false" />
+            <element signature="e#17932#17968#0" expanded="false" />
+            <element signature="e#18037#18079#0" expanded="false" />
+            <element signature="e#18129#18166#0" expanded="false" />
+            <element signature="e#18238#18282#0" expanded="false" />
+            <element signature="e#18478#18497#0" expanded="false" />
+            <element signature="e#18793#18815#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/main.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="271">
+          <caret line="953" column="22" lean-forward="false" selection-start-line="953" selection-start-column="16" selection-end-line="953" selection-end-column="22" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/parserUi.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3349">
+          <caret line="805" column="22" lean-forward="false" selection-start-line="805" selection-start-column="16" selection-end-line="805" selection-end-column="22" />
+          <folding>
+            <element signature="e#194#204#0" expanded="true" />
           </folding>
         </state>
       </provider>

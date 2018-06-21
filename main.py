@@ -97,6 +97,7 @@ class parser():
     @property
     def myTrie(self):
         # if self.__selectedTrie in self.__myTrie:
+        # print("Current trie is " + self.__selectedTrie);
         return self.__myTrie[self.__selectedTrie]
     @myTrie.setter
     def myTrie(self, inTrie):
@@ -366,7 +367,7 @@ class parser():
         endNote = self.myUst.notes[inMissingNote.startNote + inMissingNote.range - 1]
         nextNote = self.myUst.notes[inMissingNote.startNote + inMissingNote.range]
 
-        if currNote.state != "prev" and currNote.state != "next":
+        if currNote.state != "prev" and currNote.state != "next" and currNote.state != "noNext":
             currNote.state = ""
 
         # if the numSylls is 0, then we have a stand-alone "-". Extend it based on the previous note
@@ -392,11 +393,13 @@ class parser():
 
             self.clearNote(currNote)
             self.createVCCVNotes(currNote, inMissingNote.fixedSylls)
+
             currNote.parentLyric = inMissingNote.lyric
 
             if self.isParsed:
                 self.fixPrevNote(prevNote, currNote)
                 self.fixNextNote(currNote, nextNote)
+
 
         # finally the note must have more than one syllable, so parse it as a multi-syllable word
         else:
@@ -487,7 +490,7 @@ class parser():
     #         counter += 1
 
     # create a VCCV Note based on the syllables given
-    def createVCCVNotes(self, inNote, syllables):
+    def createVCCVNotes(self, inNote, syllables, update=False):
 
         # split the syllables based on the format C*"("V*")"C*
         if "(" in syllables and ")" in syllables:
@@ -505,6 +508,19 @@ class parser():
             inNote.startConst = syllableParts[0]
             inNote.vowel = syllableParts[1]
             inNote.endConst = syllableParts[2]
+        elif update:
+            syllList = syllables.split(",")
+            tempNotes = list()
+            if len(syllList) > 0:
+                for syll in syllList:
+                    if len(tempNotes) == 0 and len(syll) > 0:
+                        tempNotes.append(copyNote(inNote, syll, location="VCCVNoteUpdateUST"))
+                    elif len(syll) > 0:
+                        tempNotes.append(note(True, lyric=syll, pitch=inNote.pitch))
+
+                inNote.subNotes = tempNotes
+
+
 
     # Extends a note currNote based off of the previous note's lyric.
     # Cases:
@@ -543,6 +559,11 @@ class parser():
     def formatNotes(self, prevNote, currNote):
 
         errState = 0
+        if currNote is None and self.myUst.hasNext == False and prevNote == self.myUst.notes[-1] and self.myUst.notes[-1].state != "noNext":
+            currNote = note(True, lyric="R", pitch=str(prevNote.pitch))
+            currNote.subNotes = [copyNote(currNote, location="formatNotes")]
+            currNote.state = "noNext"
+            self.myUst.notes.append(currNote)
 
         try:
             #gets the prefix and suffix of the current note
@@ -631,6 +652,7 @@ class parser():
             # Try seeing if the note's CV and VC portions have been parsed and, if not, parse them
             # First test if the first subNote (always the psuedoVCCV CV) is in the oto. If not, then test it should be a CCV to be parsed
 
+            # print(currNote.lyric + " " + str(len(currNote.subNotes)) + " " + myPrefix + " " + mySuffix)
             if self.checkOto(currNote.subNotes[0].lyric, myPrefix, mySuffix) is None:
 
                 # if we start with at least 2 consonants and we're a valid note, then add the "proper" CCV notes
@@ -662,6 +684,25 @@ class parser():
 
             errState = 5
 
+            if currNote.state == "noNext":
+                currNote.subNotes.clear()
+                currNote.subNotes = [prevNote.subNotes.pop(-1)]
+                currNote.length = "480"
+
+
+
+                # print("prevNote's subnotes\n")
+                # for tempNote in prevNote.subNotes:
+                #     print(tempNote.lyric + ", ")
+                # print("\n")
+                #
+                # print("CurrNote's subnotes")
+                # for tempNote in currNote.subNotes:
+                #     print(tempNote.lyric + ", ")
+                # print("\n")
+                #
+                # print("Done")
+
             self.getSizes(prevNote, currNote)
 
         except ParserException as pErr:
@@ -671,8 +712,8 @@ class parser():
                 raise ParserException("ERROR: (formattingNotes|getting prefix.map vals) Could not get prefix values for note \"%s\" with err: %s" %(currNote.subNotes, err))
             elif errState == 1:
                 raise ParserException("ERROR: (formattingNotes|performing prevNote functions) Could not parse previous note \"%s\" with curr note \"%s\" with err: %s" %(prevNote.lyric, currNote.lyric, err))
-            elif errState == 2:
-                raise ParserException("ERROR: (formattingNotes|currentNote CV) Could not parse current note \"%s\" CV section \"%s\" with err: %s" %(currNote.lyric, currNote.syllables[0], err))
+            # elif errState == 2:
+            #     raise ParserException("ERROR: (formattingNotes|currentNote CV) Could not parse current note \"%s\" CV section \"%s\" with err: %s" %(currNote.lyric, currNote.syllables[0], err))
             elif errState == 3:
                 raise ParserException(
                     "ERROR: (formattingNotes|currentNote VC) Could not parse current note \"%s\" VC section \"%s\" with err: %s" % (
@@ -748,6 +789,10 @@ class parser():
         index = len(prevNote.subNotes) - 1
         errState = 0
 
+        # print("GET SIZES")
+        # print("In getSizes with prevNote " + prevNote.lyric + " and currNote " + currNote.lyric)
+        # print("PrevNote has " + str(len(prevNote.subNotes)) + " subnotes and currNote has " + str(len(currNote.subNotes)) + " subnotes")
+
         try:
             inCounter = 0
 
@@ -775,7 +820,7 @@ class parser():
                     prevNote.subNotes[index].length = str(int(float(self.checkOto(currLyric, myPrefix, mySuffix).preutterance)))
 
                 # otherwise if the currLyric is a rest:
-                elif currLyric is None and self.isRest(currNote.lyric):
+                elif currLyric is None and self.isRest(currNote.lyric) and currNote.state != "noNext":
 
                     # if the current rest is large enough (>1920), increase prevNote's last note by a fixed amount and
                     # adjust the tempLen's of currNote and PrevNote to the new values
