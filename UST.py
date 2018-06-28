@@ -154,15 +154,15 @@ class Ust:
 
         try:
             outFile = open(fileName, 'w')
-            outputFile = open("output.txt", "w")
+            # outputFile = open("output.txt", "w")
 
             # write the version and setting information using the settingsKey list for order
             outFile.write('[#VERSION]\n' + self.__settings['[#VERSION]'] + '\n' + '[#SETTING]\n')
-            outputFile.write('[#VERSION]\n' + self.__settings['[#VERSION]'] + '\n' + '[#SETTING]\n')
+            # outputFile.write('[#VERSION]\n' + self.__settings['[#VERSION]'] + '\n' + '[#SETTING]\n')
             errState = 1
             for setting in self.__settingsKeys:
                 outFile.write(setting + '=' + self.__settings[setting] + '\n')
-                outputFile.write(setting + '=' + self.__settings[setting] + '\n')
+                # outputFile.write(setting + '=' + self.__settings[setting] + '\n')
 
             # get the index to label the notes as well as the list of parameters that had split data
             currentIndex = self.__startValue
@@ -178,29 +178,29 @@ class Ust:
                 for subNote in currNote.subNotes:
                     if currNote.state == "prev" and self.__hasPrev and subNote == currNote.subNotes[0]:
                         outFile.write('[#PREV]\n')
-                        outputFile.write('[#PREV]\n')
+                        # outputFile.write('[#PREV]\n')
                     elif currNote.state == "next" and self.__hasNext:
                         outFile.write('[#NEXT]\n')
-                        outputFile.write('[#NEXT]\n')
+                        # outputFile.write('[#NEXT]\n')
                     elif currNote.state == "delete":
                         outFile.write('[#DELETE]\n')
-                        outputFile.write('[#DELETE]\n')
+                        # outputFile.write('[#DELETE]\n')
                     else:
                         if subNote == currNote.subNotes[0] and currNote.state != "noNext":
                             outFile.write(convertNoteNumber(currentIndex) + '\n')
-                            outputFile.write(convertNoteNumber(currentIndex) + '\n')
+                            # outputFile.write(convertNoteNumber(currentIndex) + '\n')
                         elif subNote != currNote.subNotes[0] or currNote.state == "insert" or currNote.state == "noNext":
                             outFile.write("[#INSERT]\n")
-                            outputFile.write("[#INSERT]\n")
+                            # outputFile.write("[#INSERT]\n")
                         currentIndex += 1
 
                     # for each parameter in the note, write the parameter. Any paramter in splitProperties has its properties
                     # reformatted for the ust
                     for property in subNote.getPropertiesKeys():
                         outFile.write(property + '=')
-                        outputFile.write(property + '=')
+                        # outputFile.write(property + '=')
                         outFile.write(str(subNote.getProperty(property)) + '\n')
-                        outputFile.write(str(subNote.getProperty(property)) + '\n')
+                        # outputFile.write(str(subNote.getProperty(property)) + '\n')
 
 
                     # if currNote.getProperty("Tempo") is None and (noteCount - 1) in self.tempoDict:
@@ -218,9 +218,7 @@ class Ust:
                 raise ParserException("ERROR: (Writing UST|Notes) Could not write note %i# %s from %s." %(noteCount, subNote.lyric, currNote.lyric))
         finally:
             outFile.close()
-            outputFile.close()
-
-
+            # outputFile.close()
 
     # testing function: changes all lyrics in the selected notes to newLyric
     def changeAllLyrics(self, newLyric):
@@ -248,14 +246,10 @@ class Ust:
         if self.__startValue == -1:
             self.__startValue = 0 if (len(self.__notes) > 0 and not self.__hasPrev) else 1
 
-
-
-
     # DO NOT TRUST, EVIL
     def deleteNote(self, index):
         if (index == 0 and self.__notes[0].state != "prev") or (index == len(self.__notes) - 1 and self.__notes[-1].state != "next") or (index > 0 and index < len(self.__notes)):
             self.__notes[index].state = "delete"
-
 
     # get the note at the index inIndex within the ust; includes prev if unless specified
     def getNoteIndex(self, inIndex, usePrev = False):

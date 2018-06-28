@@ -12,6 +12,7 @@ from PyQt5.QtWidgets import QMainWindow, QApplication, QDialog, QHeaderView
 import main
 from main import parser, missingNote
 
+# dialog box for accepting input for the dictionary
 class Ui_Dialog(object):
 
     def setupUi(self, Dialog):
@@ -39,13 +40,14 @@ class Ui_Dialog(object):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
 
+# dialog box for the settings options
 class Ui_dlogSettings(object):
     def setupUi(self, dlogSettings):
         dlogSettings.setObjectName("dlogSettings")
-        dlogSettings.resize(420, 158)
+        dlogSettings.resize(435, 224)
 
         self.buttonBox = QtWidgets.QDialogButtonBox(dlogSettings)
-        self.buttonBox.setGeometry(QtCore.QRect(60, 110, 341, 32))
+        self.buttonBox.setGeometry(QtCore.QRect(60, 180, 341, 32))
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName("buttonBox")
@@ -62,8 +64,24 @@ class Ui_dlogSettings(object):
         self.ckbxBlendEngVowels.setGeometry(QtCore.QRect(30, 80, 311, 20))
         self.ckbxBlendEngVowels.setObjectName("ckbxBlendVowels")
 
+        self.ltxtStartSymbol = QtWidgets.QLineEdit(dlogSettings)
+        self.ltxtStartSymbol.setGeometry(QtCore.QRect(30, 110, 61, 22))
+        self.ltxtStartSymbol.setText("")
+        self.ltxtStartSymbol.setObjectName("ltxtStartSymbol")
+
+        self.lblStartSymbol = QtWidgets.QLabel(dlogSettings)
+        self.lblStartSymbol.setGeometry((QtCore.QRect(110,110,74,16)))
+
+        self.ltxtEndSymbol = QtWidgets.QLineEdit(dlogSettings)
+        self.ltxtEndSymbol.setGeometry(QtCore.QRect(30, 140, 61, 22))
+        self.ltxtEndSymbol.setText("")
+        self.ltxtEndSymbol.setObjectName("ltxtEndSymbol")
+
+        self.lblEndSymbol = QtWidgets.QLabel(dlogSettings)
+        self.lblEndSymbol.setGeometry((QtCore.QRect(110, 140, 81, 16)))
+
         self.btnSaveSettings = QtWidgets.QPushButton(dlogSettings)
-        self.btnSaveSettings.setGeometry(QtCore.QRect(30, 110, 93, 28))
+        self.btnSaveSettings.setGeometry(QtCore.QRect(30, 180, 93, 28))
         self.btnSaveSettings.setObjectName("btnSaveSettings")
         self.btnSaveSettings.clicked.connect(self.saveSettings)
 
@@ -80,36 +98,70 @@ class Ui_dlogSettings(object):
         self.ckbxFullLen.setText(_translate("dlogSettings", "Extend VC endings based on the oto's Consonant field"))
         self.ckbxBlendVowels.setText(_translate("dlogSettings", "Blend Vowels using the previous note's VC Ending"))
         self.ckbxBlendEngVowels.setText(_translate("dlogSettings", "(English) Blend Vowels missing VV transitions"))
+        self.lblStartSymbol.setText(_translate("dlogSettings", "Start Symbol"))
+        self.lblEndSymbol.setText(_translate("dlogSettings", "End Symbol"))
         self.btnSaveSettings.setText(_translate("dlogSettings", "Save Settings"))
 
+    # saveSettings: saves the currently selected settings by writing to the settings.txt file
     def saveSettings(self):
 
         tempList = list()
+        settingsList = list()
 
+        # gets the original settings to maintain order
         with open("settings.txt", "r") as settingsFile:
             for line in settingsFile:
                 tempList.append(line)
         settingsFile.close()
 
+        # loops through each setting that was set and writes them to the file
         with open("settings.txt", "w") as settingsFile:
             for item in tempList:
                 if "fulllen" in item:
-                    settingsFile.write("fulllen true\n") if self.ckbxFullLen.isChecked() else settingsFile.write(
-                        "fulllen false\n")
+                    settingsFile.write("fulllen=true\n") if self.ckbxFullLen.isChecked() else settingsFile.write(
+                        "fulllen=false\n")
+                    settingsList.append("fulllen")
                 elif "blendvowels" in item:
                     settingsFile.write(
-                        "blendvowels true\n") if self.ckbxBlendVowels.isChecked() else settingsFile.write(
-                        "blendvowels false\n")
+                        "blendvowels=true\n") if self.ckbxBlendVowels.isChecked() else settingsFile.write(
+                        "blendvowels=false\n")
+                    settingsList.append("blendvowels")
                 elif "blendengvowels" in item:
                     settingsFile.write(
-                        "blendengvowels true\n") if self.ckbxBlendEngVowels.isChecked() else settingsFile.write(
-                        "blendengvowels false\n")
-                else:
+                        "blendengvowels=true\n") if self.ckbxBlendEngVowels.isChecked() else settingsFile.write(
+                        "blendengvowels=false\n")
+                    settingsList.append("blendengvowels")
+                elif "startSymbol" in item:
+                    settingsFile.write("startSymbol=" + self.ltxtStartSymbol.text() + "\n")
+                    settingsList.append("startSymbol")
+                elif "endSymbol" in item:
+                    settingsFile.write("endSymbol=" + self.ltxtEndSymbol.text() + "\n")
+                    settingsList.append("endSymbol")
+                elif len(item) > 2:
                     settingsFile.write(item)
+
+            if "fulllen" not in settingsList:
+                settingsFile.write("fulllen=true\n") if self.ckbxFullLen.isChecked() else settingsFile.write(
+                    "fulllen=false\n")
+            if "blendvowels" not in settingsList:
+                settingsFile.write(
+                    "blendvowels=true\n") if self.ckbxBlendVowels.isChecked() else settingsFile.write(
+                    "blendvowels=false\n")
+            if "blendengvowels" not in settingsList:
+                settingsFile.write(
+                    "blendengvowels=true\n") if self.ckbxBlendEngVowels.isChecked() else settingsFile.write(
+                    "blendengvowels=false\n")
+            if "startSymbol" not in settingsList:
+                settingsFile.write("startSymbol=" + self.ltxtStartSymbol.text() + "\n")
+            if "endSymbol" not in settingsList:
+                settingsFile.write("endSymbol=" + self.ltxtEndSymbol.text() + "\n")
+
+
 
 
         settingsFile.close()
 
+# the main window of the UI
 class mainWindow(object):
     def setupUi(self, MainWindow):
         self.myParser = parser()
@@ -314,6 +366,7 @@ class mainWindow(object):
 
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
+    # sets text and stuff, mostly pre-generated
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
 
@@ -367,6 +420,178 @@ class mainWindow(object):
         self.mnuSaveDictionary.setText(_translate("MainWindow", "Save Dictionary"))
         self.mnuSetDefaultDictionary.setText(_translate("MainWindow", "Set Current Dictionary As Default"))
         self.mnuSettings.setText(_translate("MainWindow", "Settings"))
+
+    # used on init. Converts lyrics to the psuedo VCCV syntax and puts them in the UST. Any errors are triggered here.
+    def parseUST(self):
+        # go through each note and try to find the lyric in the dictionary
+        self.myParser.selectedTrie = self.myParser.trieList[self.cmbLanguage.currentIndex() - 1] if self.cmbLanguage.currentIndex() > 0 else ""
+
+
+        if self.cmbLanguage.currentIndex() > 0:
+            self.myParser.missingWords.clear()
+            self.myParser.run()
+
+            # any missing words are stored in parser.missingWords. Add all missing words to the Error tab and mark the number of errors
+            if len(self.myParser.missingWords) > 0:
+
+                self.tblErrors.setRowCount(len(self.myParser.missingWords))
+                self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabError), "Errors (" + str(len(self.myParser.missingWords)) + ")")
+                count = 0
+                for missing in self.myParser.missingWords:
+                    missingList = missing.listData()
+                    for i in range (0, 3):
+                        item = QtWidgets.QTableWidgetItem()
+                        item.setText(missingList[i])
+                        self.tblErrors.setItem(count, i, item)
+                    count += 1
+            else:
+                self.tblErrors.setRowCount(0)
+                self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabError), "Errors")
+
+            self.updateParserTable()
+            self.myParser.isParsed = False
+
+        # store the current parsing of the ust to check for updates
+        self.originalParse.clear()
+        for i in range(0, self.tblParserOutput.rowCount()):
+            self.originalParse.append(self.tblParserOutput.item(i, 2).text())
+
+    # used for the "Parse" button on the parser tab. Final parsing for the UST.
+    def handleParseButton(self):
+        index = self.cmbLanguageSetting.currentIndex()
+
+        if index == 0:
+            # updates the Ust with any changes the user made on the Parser page
+            self.btnParse.setEnabled(False)
+            try:
+
+                self.updateUst()
+                # formats the notes into the VCCV format
+                if self.myParser.isParsed:
+                    for i in range (1, len(self.myParser.myUst.notes)):
+                        self.myParser.getSizes(self.myParser.myUst.notes[i-1], self.myParser.myUst.notes[i])
+
+                    # change subnotes to whatever's there and update sizes
+                else:
+                    self.formatVCCVNotes()
+                    self.myParser.isParsed = True
+            except Exception as err:
+                raise err
+            finally:
+                self.btnParse.setEnabled(True)
+
+    # updates the UST based on whatever the user changed on the parser tab. Changes to syllables replaces the note's syllables
+    # while changing the lyric updates the lyric.
+    def updateUst(self):
+
+        canParse = -1
+        # loop through all of the notes besides the perv and next notes
+        for i in range(1, self.tblParserOutput.rowCount()):
+
+            # canParse used to prevent reformatting multi-syllable notes, so ignore them and the last "next" note.
+            if i >= canParse and self.myParser.myUst.notes[i].state != "next":
+                # get the user's word, syllables, and the note's original syllables
+                inWord = self.tblParserOutput.item(i, 2).text().lower()
+                inSyllables = self.tblParserOutput.item(i, 3).text()
+                tempSyll = ""
+
+                for note in self.myParser.myUst.notes[i].subNotes:
+                    tempSyll = tempSyll + note.lyric + ","
+
+                # if the syllables do not equal the original syllables, replace them
+                if inSyllables != tempSyll[:-1]:
+                    self.myParser.myUst.notes[i].subNotes.clear()
+                    self.myParser.createVCCVNotes(self.myParser.myUst.notes[i], inSyllables, update=True)
+
+                # otherwise if the word does not match the original lyric, reparse the note.
+                elif i < len(self.originalParse) and inWord != self.originalParse[i].lower() and \
+                                self.myParser.myUst.notes[i].state != 'extended' and \
+                                self.myParser.myUst.notes[i].state != "noNext":
+                    index = i
+                    numSylls = 0
+                    totalLen = 0
+                    finalLyric = ""
+                    endLoop = True
+
+                    # loop through the notes until you reach the end or find a non-rest lyric that doesn't end with "-".
+                    # any non-rest lyrics have their lyrics added to the finalLyric and are counted for # syllables
+                    while index < self.tblParserOutput.rowCount() - 1 and endLoop:
+                        currLyric = self.tblParserOutput.item(index, 2).text()
+                        if len(currLyric) > 0:
+                            if currLyric != "-" and currLyric.lower() != 'r':
+                                numSylls += 1
+                                finalLyric = finalLyric + currLyric[:-1] if currLyric[
+                                                                                -1] == "-" else finalLyric + currLyric
+                                if currLyric[-1] != "-" and currLyric.lower() != 'r':
+                                    endLoop = False
+
+                            index += 1
+                            totalLen += 1
+
+                    finalLyric = finalLyric.lower()
+
+                    # create a missingNote object to format the information for fixing the notes
+                    myMissingNote = missingNote(inLyric=finalLyric, inNumSylls=numSylls,
+                                                inStartNote=index - totalLen, inRange=totalLen)
+
+                    # if the finalLyric is an actual word and we were able to find a valid pronunciation, parse it
+                    if finalLyric != "" and self.myParser.getSyllables(
+                            self.myParser.myTrie.getWord(finalLyric), numSylls) is not None:
+                        myMissingNote.fixedSylls = self.myParser.getSyllables(
+                            self.myParser.myTrie.getWord(finalLyric), numSylls)
+                        self.myParser.parseFixedVCCV(myMissingNote, fullClear=True)
+                    # otherwise treat it like a mixxing word
+                    else:
+                        self.myParser.missingWords.append(myMissingNote)
+
+                    # prevent editing notes until we reach the end of the current lyric
+                    canParse = index
+
+        self.updateParserTable()
+
+    # formats the nots for the parser
+    def formatVCCVNotes(self):
+        for i in range(1, len(self.myParser.myUst.notes)):
+            self.myParser.formatNotes(self.myParser.myUst.notes[i - 1], self.myParser.myUst.notes[i])
+
+        # if we have the last note in the entire ust, update the final note and add an extra note as an ending note
+        if self.myParser.myUst.hasNext == False:
+            if self.myParser.isRest(self.myParser.myUst.notes[-1].lyric):
+                self.myParser.myUst.notes[-1].state = "restEnd"
+            else:
+                self.myParser.formatNotes(self.myParser.myUst.notes[-1], None)
+
+        self.updateParserTable()
+
+    # updates the parser grid based on the current state of the UST
+    def updateParserTable(self):
+        self.tblParserOutput.setRowCount(len(self.myParser.myUst.notes))
+        count = 0
+        groupCount = 0
+
+        # loop through each note in the UST
+        for note in self.myParser.myUst.notes:
+            inserts = [str(count), note.lyric, note.parentLyric]
+
+            # add the index, the lyric, and the lyric found in the grid
+            for insert in inserts:
+                item = QtWidgets.QTableWidgetItem()
+                item.setText(insert)
+                self.tblParserOutput.setItem(count, groupCount, item)
+                groupCount += 1
+
+            # concatenate the syllables to the psuedo VCCV format
+            sylls = ""
+            for subNote in note.subNotes:
+                sylls = sylls + "," + subNote.lyric if sylls != "" else subNote.lyric
+
+
+            # add the row into the group
+            item = QtWidgets.QTableWidgetItem()
+            item.setText(sylls)
+            self.tblParserOutput.setItem(count, 3, item)
+            groupCount = 0
+            count += 1
 
     # used by search button on the dictionary page. Checks if the word given is in the dictionary, and puts any syllables
     # in the grid. If the word ends with "-" looks up any words that start with the substring.
@@ -435,75 +660,6 @@ class mainWindow(object):
         else:
             self.tblDictionary.setRowCount(0)
 
-    # used on init. Converts lyrics to the psuedo VCCV syntax and puts them in the UST. Any errors are triggered here.
-    def parseUST(self):
-        # go through each note and try to find the lyric in the dictionary
-        self.myParser.selectedTrie = self.myParser.trieList[self.cmbLanguage.currentIndex() - 1] if self.cmbLanguage.currentIndex() > 0 else ""
-
-
-        if self.cmbLanguage.currentIndex() > 0:
-            self.myParser.missingWords.clear()
-            self.myParser.run()
-
-            # any missing words are stored in parser.missingWords. Add all missing words to the Error tab and mark the number of errors
-            if len(self.myParser.missingWords) > 0:
-
-                self.tblErrors.setRowCount(len(self.myParser.missingWords))
-                self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabError), "Errors (" + str(len(self.myParser.missingWords)) + ")")
-                count = 0
-                for missing in self.myParser.missingWords:
-                    missingList = missing.listData()
-                    for i in range (0, 3):
-                        item = QtWidgets.QTableWidgetItem()
-                        item.setText(missingList[i])
-                        self.tblErrors.setItem(count, i, item)
-                    count += 1
-            else:
-                self.tblErrors.setRowCount(0)
-                self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabError), "Errors")
-
-            self.updateParserTable()
-            self.myParser.isParsed = False
-
-        # store the current parsing of the ust to check for updates
-        self.originalParse.clear()
-        for i in range(0, self.tblParserOutput.rowCount()):
-            self.originalParse.append(self.tblParserOutput.item(i, 2).text())
-
-
-    # updates the parser grid based on the current state of the UST
-    def updateParserTable(self):
-        self.tblParserOutput.setRowCount(len(self.myParser.myUst.notes))
-        count = 0
-        groupCount = 0
-
-        # loop through each note in the UST
-        for note in self.myParser.myUst.notes:
-            inserts = [str(count), note.lyric, note.parentLyric]
-            # print("Inserts are %s, %s, %s" %(inserts[0], inserts[1], inserts[2]))
-
-            # add the index, the lyric, and the lyric found in the grid
-            for insert in inserts:
-                item = QtWidgets.QTableWidgetItem()
-                item.setText(insert)
-                self.tblParserOutput.setItem(count, groupCount, item)
-                groupCount += 1
-
-            # concatenate the syllables to the psuedo VCCV format
-            sylls = ""
-            # print("Getting syls for " + note.lyric + " with " + str(len(note.subNotes)) + " subnotes")
-            for subNote in note.subNotes:
-                # print("Subnote: " + subNote.lyric)
-                sylls = sylls + "," + subNote.lyric if sylls != "" else subNote.lyric
-
-
-            # add the row into the group
-            item = QtWidgets.QTableWidgetItem()
-            item.setText(sylls)
-            self.tblParserOutput.setItem(count, 3, item)
-            groupCount = 0
-            count += 1
-
     # used by the updateDictionary button on the Errors page. Adds whatever fixes the user made into the dictionary if they're valid
     def addWordsToDictionary(self):
         rowCount = self.tblErrors.rowCount()
@@ -531,7 +687,6 @@ class mainWindow(object):
     def addWordsToDictionaryAndUpdate(self):
         rowCount = self.tblErrors.rowCount()
         delCount = 0
-        oldDelCount = 0
         tempMissingWords = list()
 
         # loop through each row in the errors page. If the user tried to fix a word then insert it into the dictionary
@@ -539,7 +694,9 @@ class mainWindow(object):
         for i in range(0, rowCount):
             inSyll = self.tblErrors.item(i - delCount, 2).text()
             oldDelCount = delCount
-            # print("Checking on word %s from the missingWords %s with num sylls %i" %(self.tblErrors.item(i - delCount, 0).text(), self.myParser.missingWords[i].lyric, self.myParser.missingWords[i].numSylls))
+
+            # if the syllables included equals the number of the missing syllables, update the UST, add the word to the dictionary
+            # and remove the word from the error tab
             if len(inSyll) > 0 and len(inSyll.split(":")) == self.myParser.missingWords[i].numSylls:
                 self.myParser.missingWords[i].fixedSylls = inSyll.split(":") if len(inSyll.split(":")) > 1 else inSyll
                 self.myParser.myTrie.insertWord(self.myParser.missingWords[i].lyric, [inSyll])
@@ -563,6 +720,7 @@ class mainWindow(object):
                         self.tblErrors.removeRow(i - delCount)
                         delCount += 1
 
+            # if we didn't delete anything, keep the missing word
             if delCount == oldDelCount:
                 tempMissingWords.append(self.myParser.missingWords[i])
 
@@ -601,100 +759,8 @@ class mainWindow(object):
 
         self.checkWord()
 
-    # used for the "Parse" button on the parser tab. Final parsing for the UST.
-    def handleParseButton(self):
-        index = self.cmbLanguageSetting.currentIndex()
 
-        if index == 0:
-            # updates the Ust with any changes the user made on the Parser page
-            self.btnParse.setEnabled(False)
-            try:
-
-                self.updateUst()
-                # formats the notes into the VCCV format
-                if self.myParser.isParsed:
-                    for i in range (1, len(self.myParser.myUst.notes)):
-                        self.myParser.getSizes(self.myParser.myUst.notes[i-1], self.myParser.myUst.notes[i])
-                    # change subnotes to whatever's there and update sizes
-                else:
-                    self.formatVCCVNotes()
-                    self.myParser.isParsed = True
-            except Exception as err:
-                raise err
-            finally:
-                self.btnParse.setEnabled(True)
-
-    # updates the UST based on whatever the user changed on the parser tab. Changes to syllables replaces the note's syllables
-    # while changing the lyric updates the lyric.
-    def updateUst(self):
-
-
-        canParse = -1
-        # loop through all of the notes besides the perv and next notes
-        for i in range(1, self.tblParserOutput.rowCount()):
-            # canParse used to prevent reformatting multi-syllable notes, so ignore them and the last "next" note.
-            if i >= canParse and self.myParser.myUst.notes[i].state != "next":
-
-                # get the user's word, syllables, and the note's original syllables
-                inWord = self.tblParserOutput.item(i, 2).text()
-                inSyllables = self.tblParserOutput.item(i, 3).text()
-                tempSyll = ""
-                for note in self.myParser.myUst.notes[i].subNotes:
-                    tempSyll = tempSyll + note.lyric + ","
-
-                # print("inSyllables: " + inSyllables + " tempSyll: " + tempSyll)
-
-                # if the syllables do not equal the original syllables, replace them
-                if inSyllables != tempSyll[:-1]:
-                    # print("Replacing sylls since inSyll does not equal tempSyll")
-                    self.myParser.myUst.notes[i].subNotes.clear()
-                    self.myParser.createVCCVNotes(self.myParser.myUst.notes[i], inSyllables, update=True)
-
-                # otherwise if the word does not match the original lyric, reparse the note.
-                elif i < len(self.originalParse) and inWord != self.originalParse[i] and self.myParser.myUst.notes[i].state != 'extended' and self.myParser.myUst.notes[i].state != "noNext":
-                    index = i
-                    numSylls = 0
-                    totalLen = 0
-                    finalLyric = ""
-                    endLoop = True
-                    # loop through the notes until you reach the end or find a non-rest lyric that doesn't end with "-".
-                    # any non-rest lyrics have their lyrics added to the finalLyric and are counted for # syllables
-                    while index < self.tblParserOutput.rowCount() - 1 and endLoop:
-                        currLyric = self.tblParserOutput.item(index, 2).text()
-                        if len(currLyric) > 0:
-                            if currLyric != "-" and currLyric.lower() != 'r':
-                                numSylls += 1
-                                finalLyric = finalLyric + currLyric[:-1] if currLyric[-1] == "-" else finalLyric + currLyric
-                                if currLyric[-1] != "-" and currLyric.lower() != 'r':
-                                    endLoop = False
-
-                            index += 1
-                            totalLen += 1
-
-
-                    # create a missingNote object to format the information for fixing the notes
-                    myMissingNote = missingNote(inLyric = finalLyric, inNumSylls= numSylls, inStartNote=index - totalLen, inRange= totalLen)
-
-                    # if the finalLyric is an actual word and we were able to find a valid pronunciation, parse it
-                    if finalLyric != "" and self.myParser.getSyllables(self.myParser.myTrie.getWord(finalLyric), numSylls) is not None:
-
-                        myMissingNote.fixedSylls = self.myParser.getSyllables(self.myParser.myTrie.getWord(finalLyric), numSylls)
-                        self.myParser.parseFixedVCCV(myMissingNote, fullClear=True)
-                    # otherwise treat it like a mixxing word
-                    else:
-                        self.myParser.missingWords.append(myMissingNote)
-
-                    # prevent editing notes until we reach the end of the current lyric
-                    canParse = index
-                # else:
-                    # print("I equals " + str(i) + "/" + str(len(self.originalParse)) + " with lyric " + self.myParser.myUst.notes[i].lyric)
-
-
-        self.updateParserTable()
-
-    #_word: word1|word2
-    #word word1|word2
-
+    # opens the settings dialog, showing the current selections and then saving any changes
     def openSettingsDialog(self):
         mySettings = settingsDialog()
         if self.myParser.fullLen == True:
@@ -705,6 +771,9 @@ class mainWindow(object):
 
         if self.myParser.ENG_VVBlend == True:
             mySettings.ckbxBlendEngVowels.setChecked(True)
+
+        mySettings.ltxtStartSymbol.setText(self.myParser.startSymbol)
+        mySettings.ltxtEndSymbol.setText(self.myParser.endSymbol)
 
         mySettings.exec_()
 
@@ -723,6 +792,9 @@ class mainWindow(object):
                 self.myParser.ENG_VVBlend = True
             else:
                 self.myParser.ENG_VVBlend = False
+
+            self.myParser.startSymbol = mySettings.ltxtStartSymbol.text()
+            self.myParser.endSymbol = mySettings.ltxtEndSymbol.text()
 
     # dialog used to import any words for the dictionary
     def openDicitonaryDialog(self):
@@ -786,34 +858,6 @@ class mainWindow(object):
                         groupCount = 0
                         count += 1
 
-
-    # formats the nots for the parser
-    def formatVCCVNotes(self):
-        for i in range(1, len(self.myParser.myUst.notes)):
-            self.myParser.formatNotes(self.myParser.myUst.notes[i-1], self.myParser.myUst.notes[i])
-
-        if self.myParser.myUst.hasNext == False:
-            self.myParser.formatNotes(self.myParser.myUst.notes[-1], None)
-
-        self.updateParserTable()
-
-    # testing function, ignore
-    def testPrinting(self):
-        rowCount = self.tblErrors.rowCount()
-        colCount = self.tblErrors.columnCount()
-        for i in range(0, rowCount):
-            for j in range(0, colCount):
-                print("At %i, %i I got %s" %(i, j, self.tblErrors.item(i, j).text()))
-
-    # on finishing the UST, overrite the UST and dictionary files.
-    def closeUST(self):
-        self.myParser.finishPlugin()
-        for trie in self.myParser.getTrieStruct:
-            self.myParser.getTrieStruct[trie].printTrieToFile()
-
-        # self.myParser.myTrie.printTrieToFile()
-        window.close()
-
     # saves the current dictionary to the dictionary file
     def saveDictionary(self):
         if self.myParser.selectedTrie in self.myParser.trieList:
@@ -834,10 +878,26 @@ class mainWindow(object):
                     settingsFile.write(item)
 
             if self.cmbLanguage.currentIndex() > 0:
-                settingsFile.write("defaultdictionary " + self.myParser.trieList[self.cmbLanguage.currentIndex() - 1] + "\n")
+                settingsFile.write("defaultdictionary " + self.myParser.trieList[
+                    self.cmbLanguage.currentIndex() - 1] + "\n")
 
         settingsFile.close()
 
+    # testing function, ignore
+    def testPrinting(self):
+        rowCount = self.tblErrors.rowCount()
+        colCount = self.tblErrors.columnCount()
+        for i in range(0, rowCount):
+            for j in range(0, colCount):
+                print("At %i, %i I got %s" %(i, j, self.tblErrors.item(i, j).text()))
+
+    # on finishing the UST, overwrite the UST and dictionary files.
+    def closeUST(self):
+        self.myParser.finishPlugin()
+        for trie in self.myParser.getTrieStruct:
+            self.myParser.getTrieStruct[trie].printTrieToFile()
+
+        window.close()
 
     # on closing the window just save the dictionary
     def closeWindow(self):
