@@ -515,7 +515,7 @@ class mainWindow(object):
 
                     # loop through the notes until you reach the end or find a non-rest lyric that doesn't end with "-".
                     # any non-rest lyrics have their lyrics added to the finalLyric and are counted for # syllables
-                    while index < self.tblParserOutput.rowCount() - 1 and endLoop:
+                    while index < self.tblParserOutput.rowCount()and endLoop:
                         currLyric = self.tblParserOutput.item(index, 2).text()
                         if len(currLyric) > 0:
                             if currLyric != "-" and currLyric.lower() != 'r':
@@ -549,17 +549,17 @@ class mainWindow(object):
 
         self.updateParserTable()
 
-    # formats the nots for the parser
+    # formats the notes for the parser
     def formatVCCVNotes(self):
+        # print("Formatting VCCV notes")
         for i in range(1, len(self.myParser.myUst.notes)):
+            if i == len(self.myParser.myUst.notes) - 1 and self.myParser.myUst.hasNext == False and self.myParser.myUst.notes[-1].state != "MIA" and self.myParser.isRest(self.myParser.myUst.notes[-1].lyric):
+                self.myParser.myUst.notes[-1].state = "restEnd"
             self.myParser.formatNotes(self.myParser.myUst.notes[i - 1], self.myParser.myUst.notes[i])
 
         # if we have the last note in the entire ust, update the final note and add an extra note as an ending note
-        if self.myParser.myUst.hasNext == False:
-            if self.myParser.isRest(self.myParser.myUst.notes[-1].lyric):
-                self.myParser.myUst.notes[-1].state = "restEnd"
-            else:
-                self.myParser.formatNotes(self.myParser.myUst.notes[-1], None)
+        if self.myParser.myUst.hasNext == False and self.myParser.myUst.notes[-1].state != "MIA" and not self.myParser.isRest(self.myParser.myUst.notes[-1].lyric):
+            self.myParser.formatNotes(self.myParser.myUst.notes[-1], None)
 
         self.updateParserTable()
 

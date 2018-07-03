@@ -270,7 +270,7 @@ class parser():
                     tempSylls = self.getSyllables(self.myTrie.getWord(lyric), 1)
 
                     # if our lyric doesn't end with a "-", isn't a rest, and is in the trie, it's a single syllable word.
-                    if lyric[-1] != '-' and self.notRest(lyric) and tempSylls is not None:
+                    if lyric[-1] != '-' and self.notRest(lyric):
                         if tempSylls is not None:
                             self.createVCCVNotes(currNote, tempSylls)
                             lastNote = index
@@ -383,7 +383,7 @@ class parser():
         prevNote = self.myUst.notes[inMissingNote.startNote - 1]
         currNote = self.myUst.notes[inMissingNote.startNote]
         endNote = self.myUst.notes[inMissingNote.startNote + inMissingNote.range - 1]
-        nextNote = self.myUst.notes[inMissingNote.startNote + inMissingNote.range]
+        nextNote = self.myUst.notes[inMissingNote.startNote + inMissingNote.range] if inMissingNote.startNote + inMissingNote.range < len(self.myUst.notes) else None
 
         if currNote.state != "prev" and currNote.state != "next" and currNote.state != "noNext":
             currNote.state = ""
@@ -478,13 +478,13 @@ class parser():
 
     # when fixing currNote we need to update any CCV beginnings and "-" symbols before we reformat them
     def fixNextNote(self, currNote, nextNote):
-        if nextNote.state != "MIA" and nextNote.subNotes[0].lyric[0] == '_':
+        if nextNote is not None and nextNote.state != "MIA" and nextNote.subNotes[0].lyric[0] == '_':
             nextNote.subNotes[0].lyric = currNote.subNotes[-1].lyric + nextNote.subNotes[0].lyric[2:]
             tempNotes = currNote.subNotes[:-1]
             currNote.subNotes.clear()
             currNote.subNotes = tempNotes
 
-        if nextNote.state != "MIA" and nextNote.subNotes[0].lyric[0] == self.startSymbol:
+        if nextNote is not None and nextNote.state != "MIA" and nextNote.subNotes[0].lyric[0] == self.startSymbol:
             nextNote.subNotes[0].lyric = nextNote.subNotes[0].lyric[1:]
 
         self.formatNotes(currNote, nextNote)
@@ -578,9 +578,10 @@ class parser():
     def formatNotes(self, prevNote, currNote):
 
         errState = 0
+
         # if the current note is none, prevnote is the last note in the UST. in this case create a dummy note to represent the "VC -" portion
         # of the note to add on to the end of the ust.
-        if currNote is None and self.myUst.hasNext == False and prevNote == self.myUst.notes[-1] and self.myUst.notes[-1].state != "noNext":
+        if currNote is None and prevNote.state != "MIA" and self.myUst.hasNext == False and prevNote == self.myUst.notes[-1] and self.myUst.notes[-1].state != "noNext":
             currNote = note(True, lyric="R", pitch=str(prevNote.pitch))
             currNote.subNotes = [copyNote(currNote, location="formatNotes")]
             currNote.state = "noNext"
@@ -855,6 +856,7 @@ class parser():
                     sum += int(myNote.length)
 
                 # add any extra space to the first note.
+
                 if int(prevNote.subNotes[0].length) + (int(prevNote.tempLen) - sum) > 0:
                     prevNote.subNotes[0].length = str(int(prevNote.subNotes[0].length) + (int(prevNote.tempLen) - sum))
 
@@ -901,6 +903,11 @@ class parser():
             # if the current note is next, adjust it's length if need be.
             if currNote.state == "next" or currNote.state == "restEnd":
                 currNote.subNotes[0].setProperty("Length", currNote.tempLen, True)
+
+            if currNote.state == "noNext":
+                prevNote.subNotes = [currNote.subNotes[0]]
+                self.myUst.notes.pop(-1)
+
 
         except Exception as err:
             if errState == 0:
