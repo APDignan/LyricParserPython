@@ -140,6 +140,7 @@ class Ust:
                 if lineCount > 0 else ParserException("ERROR: (Finding UST) Could not open UST at %s" % self.__ustPath)
         finally:
             ustFile.close()
+
     # closeUst: given a file location, write the current ust file to it. You'll want to use the ustPath initially passed
     # into it to rewrite the current ust file.
     def closeUst(self, fileName):
@@ -149,26 +150,26 @@ class Ust:
         subNote = ""
         setting = ""
         currTempo = self.settings["Tempo"]
+        outFile = None
 
         try:
             outFile = open(fileName, 'w')
-            # checkPitches = open("pitches.txt", "w")
+            # outputFile = open("output.txt", "w")
 
             # write the version and setting information using the settingsKey list for order
             outFile.write('[#VERSION]\n' + self.__settings['[#VERSION]'] + '\n' + '[#SETTING]\n')
-            # checkPitches.write('[#VERSION]\n' + self.__settings['[#VERSION]'] + '\n' + '[#SETTING]\n')
+            # outputFile.write('[#VERSION]\n' + self.__settings['[#VERSION]'] + '\n' + '[#SETTING]\n')
             errState = 1
             for setting in self.__settingsKeys:
                 outFile.write(setting + '=' + self.__settings[setting] + '\n')
-                # checkPitches.write(setting + '=' + self.__settings[setting] + '\n')
+                # outputFile.write(setting + '=' + self.__settings[setting] + '\n')
 
             # get the index to label the notes as well as the list of parameters that had split data
             currentIndex = self.__startValue
-            splitProperties = ['PBW', 'PBY', 'Envelope', '@alias', 'Flags']
 
             errState = 2
-            # for each note, write either the note number or the prev/next tags if it was the prev/next note.
 
+            # for each note, write either the note number or the prev/next tags if it was the prev/next note.
             for currNote in self.__notes:
 
                 if currNote.getProperty("Tempo") is not None:
@@ -177,38 +178,36 @@ class Ust:
                 for subNote in currNote.subNotes:
                     if currNote.state == "prev" and self.__hasPrev and subNote == currNote.subNotes[0]:
                         outFile.write('[#PREV]\n')
-                        # checkPitches.write('[#PREV]\n')
+                        # outputFile.write('[#PREV]\n')
                     elif currNote.state == "next" and self.__hasNext:
                         outFile.write('[#NEXT]\n')
-                        # checkPitches.write('[#NEXT]\n')
+                        # outputFile.write('[#NEXT]\n')
+                    elif currNote.state == "delete":
+                        outFile.write('[#DELETE]\n')
+                        # outputFile.write('[#DELETE]\n')
                     else:
-                        outFile.write(convertNoteNumber(currentIndex) + '\n')
-                        # checkPitches.write(convertNoteNumber(currentIndex) + '\n')
+                        if subNote == currNote.subNotes[0] and currNote.state != "noNext":
+                            outFile.write(convertNoteNumber(currentIndex) + '\n')
+                            # outputFile.write(convertNoteNumber(currentIndex) + '\n')
+                        elif subNote != currNote.subNotes[0] or currNote.state == "insert" or currNote.state == "noNext":
+                            outFile.write("[#INSERT]\n")
+                            # outputFile.write("[#INSERT]\n")
                         currentIndex += 1
 
                     # for each parameter in the note, write the parameter. Any paramter in splitProperties has its properties
                     # reformatted for the ust
                     for property in subNote.getPropertiesKeys():
                         outFile.write(property + '=')
-                        # checkPitches.write(property + '=')
-                        # if property in splitProperties:
-                        #     currProperty = ""
-                        #     for val in subNote.getProperty(property):
-                        #         currProperty = (currProperty + val) if property == 'Flags' else (currProperty + val + ',')
-                        #     outFile.write((currProperty + '\n') if property == 'Flags' else (currProperty[:-1] + '\n'))
-                        #     checkPitches.write("For lyric %s and property %s I got %s\n" %(subNote.lyric, property, subNote.getProperty(property)))
-                        # else:
-                        outFile.write(subNote.getProperty(property) + '\n')
-                        # checkPitches.write(subNote.getProperty(property) + '\n')
+                        # outputFile.write(property + '=')
+                        outFile.write(str(subNote.getProperty(property)) + '\n')
+                        # outputFile.write(str(subNote.getProperty(property)) + '\n')
 
-                    if currNote.getProperty("Tempo") is None and (noteCount - 1) in self.tempoDict:
-                        outFile.write("Tempo=" + currTempo + '\n')
-                        # checkPitches.write("Tempo=" + currTempo + '\n')
+
+                    # if currNote.getProperty("Tempo") is None and (noteCount - 1) in self.tempoDict:
+                    #     outFile.write("Tempo=" + currTempo + '\n')
 
                     noteCount += 1
 
-
-            # checkPitches.close()
 
         except Exception as err:
             if errState == 0:
@@ -219,8 +218,7 @@ class Ust:
                 raise ParserException("ERROR: (Writing UST|Notes) Could not write note %i# %s from %s." %(noteCount, subNote.lyric, currNote.lyric))
         finally:
             outFile.close()
-
-
+            # outputFile.close()
 
     # testing function: changes all lyrics in the selected notes to newLyric
     def changeAllLyrics(self, newLyric):
@@ -230,6 +228,8 @@ class Ust:
     # inserts a note into the ust. Trying to insert before or on a prev/next note will place it within the bounds of the ust
     def insertNote(self, inNote, index = -1):
         # if you don't specifiy where to insert the note or try to insert it at or behind the next note, place it at the end.
+
+        inNote.state = "insert"
         if index == -1 or index == len(self.__notes) - 1 or index == len(self.__notes):
             if self.__hasNext:
                 self.__notes.insert(len(self.__notes) - 1, inNote)
@@ -246,11 +246,10 @@ class Ust:
         if self.__startValue == -1:
             self.__startValue = 0 if (len(self.__notes) > 0 and not self.__hasPrev) else 1
 
-
     # DO NOT TRUST, EVIL
     def deleteNote(self, index):
         if (index == 0 and self.__notes[0].state != "prev") or (index == len(self.__notes) - 1 and self.__notes[-1].state != "next") or (index > 0 and index < len(self.__notes)):
-            self.__notes.remove(self.__notes[index])
+            self.__notes[index].state = "delete"
 
     # get the note at the index inIndex within the ust; includes prev if unless specified
     def getNoteIndex(self, inIndex, usePrev = False):
@@ -308,15 +307,14 @@ class Ust:
                 self.__notes.append(inUst.notes[-1])
 
 
-
-
-
 # note: contains the data of a single note from the ust. All properties and values are stored in a dictionary, and the
 # property keys are stored in a list to maintain the order they were read from. canEdit flags a note as prev/next,
 # preventing them from being edited by setProperty() by default.
 class note:
     # by default just creates an empty note, but passing default = True will create a note with predetermined values.
     # One can define some of these values using the proper parameters.
+
+
     def __init__(self, default = False, length = "480", lyric = 'a', pitch = "60"):
         self.__properties = dict()
         self.__propertiesKeys = list()
@@ -330,11 +328,13 @@ class note:
         self.__startConst = ""
         self.__vowel = ""
         self.__endConst = ""
+        self.__lyric = lyric
+
 
         # sets default properties
         if default == True:
             genericProperties = {'Length': length, 'Lyric': lyric, 'NoteNum': pitch, 'Intensity': "100",
-                                 'Modulation': "0", "PBS" : "0", "PBW" : "0", "PBY": "0", "VBR": "0"}
+                                 'Modulation': "0"}
 
             for property in genericProperties:
                 self.setProperty(property, genericProperties[property])
@@ -351,9 +351,6 @@ class note:
     # passing the override parameter will allow the program to edit it.
     def setProperty(self, inProperty, val, override = None):
 
-        # # parameters that I've found stores a list of values. May be subjet to change
-        # splitOnComma = ['PBW', 'PBY', 'PBS', 'VBR', 'Envelope', '@alias']
-
         # only edits the note if an override value was passed or if the note was not flagged
         if override is not None or self.canEdit:
 
@@ -362,23 +359,6 @@ class note:
                 self.__propertiesKeys.append(inProperty)
 
             self.__properties[inProperty] = val
-
-            # # if the param splits on commas, split it.
-            # if inProperty in splitOnComma:
-            #     self.__properties[inProperty] = val.split(',')
-            # # if we take in the Flags param, separate the flags whenever a number preceeds a letter
-            # elif inProperty == 'Flags':
-            #     tempStr = ''
-            #     self.__properties[inProperty] = list()
-            #     for c in val:
-            #         if len(tempStr) > 0 and tempStr[-1].isdigit() and c.isalpha():
-            #             self.__properties[inProperty].append(tempStr)
-            #             tempStr = c
-            #         else:
-            #             tempStr += c
-            #     self.__properties[inProperty].append(tempStr)
-            # otherwise we have a normal property that we can just add to the dictionary
-            # else:
 
 
     # sets a property without splitting anything. Used for copying data from one note to another.
@@ -510,24 +490,6 @@ class note:
 
         return self.vowel if self.startConst == "" else ""
 
-    # # split a lyric on it's vowel and returns the split lyric
-    # @property
-    # def splitLyric(self):
-    #     oneCharVowels = ['a', 'e', 'i', 'o', 'u', 'E', '9', '3', '@', 'A', 'I', 'O', '8', 'Q', '6', 'x', '&']
-    #     twoCharVowels = ['9l', '0l', '8n', '0r']
-    #     threeCharVowels = ['1ng', 'Ang']
-    #
-    #     myList = list()
-    #
-    #     if self.lyric[0:1] in oneCharVowels:
-    #         myList = [self.lyric[0:1], self.lyric[1:]]
-    #     elif len(self.lyric) > 1 and self.lyric[0:2] in twoCharVowels:
-    #         myList = [self.lyric[0:2], self.lyric[2:]]
-    #     elif len(self.lyric) > 2 and self.lyric[0:3] in threeCharVowels:
-    #         myList = [self.lyric[0:3], self.lyric[3:]]
-    #
-    #     return myList
-
     # returns the propertiesKeys for iteration
     def getPropertiesKeys(self):
         return self.__propertiesKeys
@@ -565,11 +527,11 @@ def copyNote(inNote, lyric=None, location=""):
     if lyric is not None:
         newNote.lyric = lyric
 
-    properties = ["PBS", "PBY", "PBW", "VBR"]
+    # properties = ["PBS", "PBY", "PBW", "VBR"]
 
-    for property in properties:
-        if inNote.getProperty(property) is None:
-            newNote.setPropertyLazy(property, "0")
+    # for property in properties:
+    #     if inNote.getProperty(property) is None:
+    #         newNote.setPropertyLazy(property, "0")
 
 
     # newNote.setProperty("PBS", "0")
@@ -577,6 +539,7 @@ def copyNote(inNote, lyric=None, location=""):
     # newNote.setProperty("PBW", "0")
 
     return newNote
+
 
 
 

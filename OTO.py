@@ -160,4 +160,3 @@ class OtoLine:
         print(self.sourceWav + '=' + self.alias + "," + self.offset + "," + self.cutoff + "," + self.consonant + "," + self.preutterance + "," + self.overlap)
 
 
-

@@ -1,4 +1,6 @@
-fulllen false
-blendvowels false
-blendengvowels true
-defaultdictionary English
+fulllen=false
+blendvowels=false
+blendengvowels=true
+defaultdictionary=English
+startSymbol=-
+endSymbol=-

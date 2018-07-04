@@ -143,3 +143,7 @@ class prefixMapItem:
     @suffix.setter
     def suffix(self, inSuffix):
         self.__suffix = inSuffix
+
+
+prefixMapItemTest = prefixMapItem(prefix="1", suffix = "2")
+prefixMapItemTest.prefix = "3"

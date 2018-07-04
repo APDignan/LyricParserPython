@@ -24,6 +24,8 @@ class parser():
         self.__fullLen = False
         self.__blendVowels = False
         self.__ENG_VVBlend = False
+        self.__startSymbol = "-"
+        self.__endSymbol = "-"
 
         # Loads dictionaries into the parser; searches dictionary folder for any .txt files to read in
         dictionaryLocation = listdir(join(os.getcwd(), "dictionary"))
@@ -52,7 +54,10 @@ class parser():
         settingsDict = dict()
         with open("settings.txt") as settingsFile:
             for line in settingsFile:
-                settingsDict[line.split(" ")[0]] = line.split(" ")[1][:-1]
+                if len(line) > 0 and "=" in line and len(line.split("=")) == 2:
+                    settingsDict[line.split("=")[0]] = line.split("=")[1][:-1]
+                elif len(line) > 0 and len(line.split(" ")) == 2:
+                    settingsDict[line.split(" ")[0]] = line.split(" ")[1][:-1]
 
         # sets any settings
         if "fulllen" in settingsDict and settingsDict["fulllen"] == "true":
@@ -68,6 +73,11 @@ class parser():
             self.selectedTrie = settingsDict["defaultdictionary"]
         else:
             self.selectedTrie = None
+
+        self.__startSymbol = settingsDict["startSymbol"] if "startSymbol" in settingsDict and len(settingsDict["startSymbol"]) > 0 else "-"
+
+        self.__startSymbol = settingsDict["endSymbol"] if "endSymbol" in settingsDict and len(settingsDict["endSymbol"]) > 0 else "-"
+
         settingsFile.close()
 
         self.__missingWords = list()
@@ -97,6 +107,7 @@ class parser():
     @property
     def myTrie(self):
         # if self.__selectedTrie in self.__myTrie:
+        # print("Current trie is " + self.__selectedTrie);
         return self.__myTrie[self.__selectedTrie]
     @myTrie.setter
     def myTrie(self, inTrie):
@@ -107,9 +118,6 @@ class parser():
     @property
     def getTrieStruct(self):
         return self.__myTrie
-    # @myTrie.setter
-    # def myTrie(self, inTrie):
-    #     self.__myTrie = inTrie
 
     @property
     def isParsed(self):
@@ -140,6 +148,20 @@ class parser():
         self.__ENG_VVBlend = inBlendVowels
 
     @property
+    def startSymbol(self):
+        return self.__startSymbol
+    @startSymbol.setter
+    def startSymbol(self, inStartSymbol):
+        self.__startSymbol = inStartSymbol
+
+    @property
+    def endSymbol(self):
+        return self.__endSymbol
+    @endSymbol.setter
+    def endSymbol(self, inEndSymbol):
+        self.__endSymbol = inEndSymbol
+
+    @property
     def selectedTrie(self):
         return self.__selectedTrie
     @selectedTrie.setter
@@ -164,12 +186,8 @@ class parser():
     # initial execution to load all of the data into the parser object.
     def run(self):
         # Try to open the Ust, Oto.ini, and prefix.map files.
+        myErr = 2
         try:
-
-            testFile = open(sys.argv[1])
-
-
-            myErr = 2
 
             self.myUst = Ust(sys.argv[1])
             myErr = 3
@@ -237,7 +255,7 @@ class parser():
         currNote = ""
 
         try:
-            # loop through eacch note in the ust
+            # loop through each note in the ust
             for currNote in self.myUst.notes:
                 # tempLen = the length the note has available to it rather than it's original length.
                 currNote.tempLen = currNote.length
@@ -252,17 +270,17 @@ class parser():
                     tempSylls = self.getSyllables(self.myTrie.getWord(lyric), 1)
 
                     # if our lyric doesn't end with a "-", isn't a rest, and is in the trie, it's a single syllable word.
-                    if lyric[-1] != '-' and self.notRest(lyric) and tempSylls is not None:
-                        self.createVCCVNotes(currNote, tempSylls)
-                        lastNote = index
-                        currNote.parentLyric = lyric
-
-                    # otherwise if the note's lyric is not in the dictionary, add it to the missingWords list and set it to MIA
-                    elif self.notRest(lyric) and lyric[-1] != '-' and tempSylls is None:
-                        self.missingWords = missingNote(inLyric=lyric, inNumSylls=1, inStartNote = index, inRange = 1)
-                        lastNote = index
-                        currNote.state = "MIA"
-                        currNote.subNotes = [copyNote(currNote, location="missingLyric")]
+                    if lyric[-1] != '-' and self.notRest(lyric):
+                        if tempSylls is not None:
+                            self.createVCCVNotes(currNote, tempSylls)
+                            lastNote = index
+                            currNote.parentLyric = lyric
+                        # otherwise if the note's lyric is not in the dictionary, add it to the missingWords list and set it to MIA
+                        else:
+                            self.missingWords = missingNote(inLyric=lyric, inNumSylls=1, inStartNote=index, inRange=1)
+                            lastNote = index
+                            currNote.state = "MIA"
+                            currNote.subNotes = [copyNote(currNote, location="missingLyric")]
 
                     # if our note's lyric is "-" then it's an extender, so try to extend the previous true note if it's not MIA.
                     elif lyric == '-' and self.myUst.notes[lastNote].state != "prev":
@@ -293,7 +311,7 @@ class parser():
                                 numSylls += 1
                             counter += 1
 
-                        # checks if we ended becasue we found the last syllable. if so add it to the string
+                        # checks if we ended because we found the last syllable. if so add it to the string
                         if index + counter < len(self.myUst.notes) and self.myUst.notes[index + counter]. state != "next" and self.myUst.notes[index + counter].lyric != '-' and self.notRest(self.myUst.notes[index + counter].lyric):
                             currLyric = currLyric + self.myUst.notes[index + counter].lyric
                             numSylls += 1
@@ -365,9 +383,9 @@ class parser():
         prevNote = self.myUst.notes[inMissingNote.startNote - 1]
         currNote = self.myUst.notes[inMissingNote.startNote]
         endNote = self.myUst.notes[inMissingNote.startNote + inMissingNote.range - 1]
-        nextNote = self.myUst.notes[inMissingNote.startNote + inMissingNote.range]
+        nextNote = self.myUst.notes[inMissingNote.startNote + inMissingNote.range] if inMissingNote.startNote + inMissingNote.range < len(self.myUst.notes) else None
 
-        if currNote.state != "prev" and currNote.state != "next":
+        if currNote.state != "prev" and currNote.state != "next" and currNote.state != "noNext":
             currNote.state = ""
 
         # if the numSylls is 0, then we have a stand-alone "-". Extend it based on the previous note
@@ -393,11 +411,13 @@ class parser():
 
             self.clearNote(currNote)
             self.createVCCVNotes(currNote, inMissingNote.fixedSylls)
+
             currNote.parentLyric = inMissingNote.lyric
 
             if self.isParsed:
                 self.fixPrevNote(prevNote, currNote)
                 self.fixNextNote(currNote, nextNote)
+
 
         # finally the note must have more than one syllable, so parse it as a multi-syllable word
         else:
@@ -446,7 +466,7 @@ class parser():
 
     # when fixing currNote we have to remove the prior note's "-" and vowel ending if it's there and reformat the notes
     def fixPrevNote(self, prevNote, currNote):
-        if prevNote.subNotes[-1].lyric[-1] == '-':
+        if prevNote.subNotes[-1].lyric[-1] == self.endSymbol:
             prevNote.subNotes[-1].lyric = prevNote.subNotes[-1].lyric[:-1]
 
             if prevNote.subNotes[-1].lastVowel != "" and len(prevNote.subNotes) > 1:
@@ -458,13 +478,13 @@ class parser():
 
     # when fixing currNote we need to update any CCV beginnings and "-" symbols before we reformat them
     def fixNextNote(self, currNote, nextNote):
-        if nextNote.state != "MIA" and nextNote.subNotes[0].lyric[0] == '_':
+        if nextNote is not None and nextNote.state != "MIA" and nextNote.subNotes[0].lyric[0] == '_':
             nextNote.subNotes[0].lyric = currNote.subNotes[-1].lyric + nextNote.subNotes[0].lyric[2:]
             tempNotes = currNote.subNotes[:-1]
             currNote.subNotes.clear()
             currNote.subNotes = tempNotes
 
-        if nextNote.state != "MIA" and nextNote.subNotes[0].lyric[0] == '-':
+        if nextNote is not None and nextNote.state != "MIA" and nextNote.subNotes[0].lyric[0] == self.startSymbol:
             nextNote.subNotes[0].lyric = nextNote.subNotes[0].lyric[1:]
 
         self.formatNotes(currNote, nextNote)
@@ -488,7 +508,7 @@ class parser():
     #         counter += 1
 
     # create a VCCV Note based on the syllables given
-    def createVCCVNotes(self, inNote, syllables):
+    def createVCCVNotes(self, inNote, syllables, update=False):
 
         # split the syllables based on the format C*"("V*")"C*
         if "(" in syllables and ")" in syllables:
@@ -506,6 +526,20 @@ class parser():
             inNote.startConst = syllableParts[0]
             inNote.vowel = syllableParts[1]
             inNote.endConst = syllableParts[2]
+        # split the syllables based on the format CV,VC (only when reading directly from parser
+        elif update:
+            syllList = syllables.split(",")
+            tempNotes = list()
+            if len(syllList) > 0:
+                for syll in syllList:
+                    if len(tempNotes) == 0 and len(syll) > 0:
+                        tempNotes.append(copyNote(inNote, syll, location="VCCVNoteUpdateUST"))
+                    elif len(syll) > 0:
+                        tempNotes.append(note(True, lyric=syll, pitch=inNote.pitch))
+
+                inNote.subNotes = tempNotes
+
+
 
     # Extends a note currNote based off of the previous note's lyric.
     # Cases:
@@ -544,6 +578,14 @@ class parser():
     def formatNotes(self, prevNote, currNote):
 
         errState = 0
+
+        # if the current note is none, prevnote is the last note in the UST. in this case create a dummy note to represent the "VC -" portion
+        # of the note to add on to the end of the ust.
+        if currNote is None and prevNote.state != "MIA" and self.myUst.hasNext == False and prevNote == self.myUst.notes[-1] and self.myUst.notes[-1].state != "noNext":
+            currNote = note(True, lyric="R", pitch=str(prevNote.pitch))
+            currNote.subNotes = [copyNote(currNote, location="formatNotes")]
+            currNote.state = "noNext"
+            self.myUst.notes.append(currNote)
 
         try:
             #gets the prefix and suffix of the current note
@@ -623,20 +665,18 @@ class parser():
                 prevVC = prevNote.vowel + prevNote.endConst
 
                 if len(prevNote.subNotes) == 1 and prevVC == prevNote.vowel:
-                    prevNote.subNotes = [note(True, lyric=prevNote.vowel + "-", pitch=prevNote.subNotes[-1].pitch)]
+                    prevNote.subNotes = [note(True, lyric=prevNote.vowel + self.__endSymbol, pitch=prevNote.subNotes[-1].pitch)]
                 else:
-                    prevNote.subNotes[-1].lyric = prevNote.subNotes[-1].lyric + "-"
+                    prevNote.subNotes[-1].lyric = prevNote.subNotes[-1].lyric + self.__endSymbol
 
             errState = 2
 
             # Try seeing if the note's CV and VC portions have been parsed and, if not, parse them
             # First test if the first subNote (always the psuedoVCCV CV) is in the oto. If not, then test it should be a CCV to be parsed
-
             if self.checkOto(currNote.subNotes[0].lyric, myPrefix, mySuffix) is None:
-
                 # if we start with at least 2 consonants and we're a valid note, then add the "proper" CCV notes
                 if len(currNote.startConst) > 1 and self.notRest(currNote.lyric, currNote.state):
-                    tempLyric = currNote.startConst if self.notRest(prevNote.lyric, prevNote.state) else "-" + currNote.startConst
+                    tempLyric = currNote.startConst if self.notRest(prevNote.lyric, prevNote.state) else self.__startSymbol + currNote.startConst
                     prevNote.subNotes = [note(True, lyric=tempLyric, pitch=prevNote.subNotes[-1].pitch)]
                     prevNote.subNotes[-1].state = "ccbeginning"
                     currNote.subNotes[0].lyric = "_" + currNote.subNotes[0].lyric[len(currNote.startConst) - 1:]
@@ -651,17 +691,21 @@ class parser():
             errState = 4
 
             # add the "-" symbol to notes if the previous note is a rest or if the current lyric is a vowel following a non VV transition
-
-
             if self.isRest(prevNote.subNotes[-1].lyric, prevNote.state) and currNote.state != "next":
                 if self.notRest(currNote.subNotes[0].lyric, currNote.state) and currNote.subNotes[0].lyric[0] != "_":
-                    currNote.subNotes[0].lyric = "-" + currNote.subNotes[0].lyric
+                    currNote.subNotes[0].lyric = self.__startSymbol + currNote.subNotes[0].lyric
 
             elif self.notRest(currNote.subNotes[0].lyric, currNote.state) and currNote.state != "next":
                 if currNote.startConst == "" and currNote.lyric != "-" and (currNote.state != "VV"):
-                    currNote.subNotes[0].lyric = "-" + currNote.subNotes[0].lyric
+                    currNote.subNotes[0].lyric = self.__startSymbol + currNote.subNotes[0].lyric
 
             errState = 5
+
+            # if prevNote was the last note in the ust, set up the dummy note to have the prevNote's last subNote.
+            if currNote.state == "noNext":
+                currNote.subNotes.clear()
+                currNote.subNotes = [prevNote.subNotes.pop(-1)]
+                currNote.length = "480"
 
             self.getSizes(prevNote, currNote)
 
@@ -672,8 +716,8 @@ class parser():
                 raise ParserException("ERROR: (formattingNotes|getting prefix.map vals) Could not get prefix values for note \"%s\" with err: %s" %(currNote.subNotes, err))
             elif errState == 1:
                 raise ParserException("ERROR: (formattingNotes|performing prevNote functions) Could not parse previous note \"%s\" with curr note \"%s\" with err: %s" %(prevNote.lyric, currNote.lyric, err))
-            elif errState == 2:
-                raise ParserException("ERROR: (formattingNotes|currentNote CV) Could not parse current note \"%s\" CV section \"%s\" with err: %s" %(currNote.lyric, currNote.syllables[0], err))
+            # elif errState == 2:
+            #     raise ParserException("ERROR: (formattingNotes|currentNote CV) Could not parse current note \"%s\" CV section \"%s\" with err: %s" %(currNote.lyric, currNote.syllables[0], err))
             elif errState == 3:
                 raise ParserException(
                     "ERROR: (formattingNotes|currentNote VC) Could not parse current note \"%s\" VC section \"%s\" with err: %s" % (
@@ -729,7 +773,7 @@ class parser():
                 if back == "":
                     return tempList
                 else:
-                    tempList[-1].lyric = tempList[-1].lyric + "-"
+                    tempList[-1].lyric = tempList[-1].lyric + self.__endSymbol
                     # front = front[len(currNote.vowel):] + back if front[0:len(currNote.vowel)] == currNote.vowel else front[1:] + back
                     front = front[1:] + back
                     back = ""
@@ -776,7 +820,7 @@ class parser():
                     prevNote.subNotes[index].length = str(int(float(self.checkOto(currLyric, myPrefix, mySuffix).preutterance)))
 
                 # otherwise if the currLyric is a rest:
-                elif currLyric is None and self.isRest(currNote.lyric):
+                elif currLyric is None and self.isRest(currNote.lyric) and currNote.state != "noNext":
 
                     # if the current rest is large enough (>1920), increase prevNote's last note by a fixed amount and
                     # adjust the tempLen's of currNote and PrevNote to the new values
@@ -803,7 +847,6 @@ class parser():
 
             # once the initial sizes have been calculated besides the first subNote in prevNote, if we have one more note but no room to fit it,
             # divide the notes equally within the length
-
             if sum >= int(prevNote.tempLen) and len(prevNote.subNotes) > 1 and self.notRest(prevNote.subNotes[0].lyric, prevNote.state):
                 sum = 0
 
@@ -813,6 +856,7 @@ class parser():
                     sum += int(myNote.length)
 
                 # add any extra space to the first note.
+
                 if int(prevNote.subNotes[0].length) + (int(prevNote.tempLen) - sum) > 0:
                     prevNote.subNotes[0].length = str(int(prevNote.subNotes[0].length) + (int(prevNote.tempLen) - sum))
 
@@ -857,8 +901,13 @@ class parser():
                 prevNote.subNotes[-1].pitch = currNote.subNotes[0].pitch
 
             # if the current note is next, adjust it's length if need be.
-            if currNote.state == "next":
+            if currNote.state == "next" or currNote.state == "restEnd":
                 currNote.subNotes[0].setProperty("Length", currNote.tempLen, True)
+
+            if currNote.state == "noNext":
+                prevNote.subNotes = [currNote.subNotes[0]]
+                self.myUst.notes.pop(-1)
+
 
         except Exception as err:
             if errState == 0:
